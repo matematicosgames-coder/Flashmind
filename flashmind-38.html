@@ -1,0 +1,3273 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>FlashMind</title>
+<meta name="description" content="Sua biblioteca de flashcards">
+<meta name="theme-color" content="#0a0a0f">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="FlashMind">
+<link rel="manifest" id="pwaManifest"/>
+  <link rel="apple-touch-icon" id="appleTouchIcon"/>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0a0a0f;
+  --surface: #111118;
+  --surface2: #1a1a26;
+  --border: #2a2a3d;
+  --gold: #e8b84b;
+  --gold2: #f5d98a;
+  --teal: #4ecdc4;
+  --rose: #ff6b8a;
+  --green: #3ecf8e;
+  --purple: #a78bfa;
+  --text: #f0eff8;
+  --muted: #6e6e96;
+  --radius: 20px;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; width: 100%; overflow: hidden; background: var(--bg); color: var(--text); font-family: 'Outfit', sans-serif; font-size: 16px; -webkit-tap-highlight-color: transparent; }
+body::before { content: ''; position: fixed; inset: 0; background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E"); pointer-events: none; z-index: 0; opacity: .6; }
+body::after { content: ''; position: fixed; top: -30vh; left: 50%; transform: translateX(-50%); width: 60vw; height: 40vh; background: radial-gradient(ellipse, rgba(232,184,75,.12) 0%, transparent 70%); pointer-events: none; z-index: 0; }
+
+/* ── DESKTOP LAYOUT (≥ 768px) ── */
+@media (min-width: 768px) {
+  html, body { overflow: hidden; background: #07070e; }
+
+  /* Wrapper geral */
+  body { display: grid; grid-template-columns: 260px 1fr; grid-template-rows: 100vh; }
+
+  /* Sidebar esquerda */
+  #dt-sidebar {
+    display: flex; flex-direction: column;
+    background: var(--surface); border-right: 1px solid var(--border);
+    padding: 32px 20px 24px; overflow-y: auto; z-index: 5;
+    grid-column: 1; grid-row: 1;
+  }
+  #dt-sidebar .dt-logo { font-family: 'Playfair Display', serif; font-size: 1.5rem; font-weight: 900; background: linear-gradient(135deg, var(--gold), var(--gold2)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 4px; }
+  #dt-sidebar .dt-sub  { font-size: .72rem; color: var(--muted); margin-bottom: 28px; }
+  #dt-sidebar .dt-nav  { display: flex; flex-direction: column; gap: 8px; flex: 1; }
+  .dt-nav-btn {
+    display: flex; align-items: center; gap: 10px;
+    padding: 11px 14px; border-radius: 12px;
+    border: 1px solid transparent; background: transparent;
+    color: var(--muted); font-family: 'Outfit', sans-serif;
+    font-size: .88rem; font-weight: 600; cursor: pointer;
+    transition: all .2s; text-align: left; width: 100%;
+  }
+  .dt-nav-btn:hover  { background: var(--surface2); color: var(--text); }
+  .dt-nav-btn.active { background: rgba(232,184,75,.1); border-color: rgba(232,184,75,.3); color: var(--gold); }
+  .dt-nav-btn .dt-icon { font-size: 1.1rem; }
+  .dt-sidebar-footer { margin-top: auto; padding-top: 20px; border-top: 1px solid var(--border); display: flex; flex-direction: column; gap: 8px; }
+  .dt-sidebar-footer button { width: 100%; }
+
+  /* Área de conteúdo */
+  #dt-content {
+    grid-column: 2; grid-row: 1;
+    position: relative; overflow: hidden;
+    background: var(--bg);
+  }
+
+  /* Telas dentro do conteúdo */
+  .screen {
+    position: absolute !important; inset: 0 !important;
+    left: 0 !important; width: 100% !important;
+    transform: none !important;
+  }
+
+  /* Home: grid de pastas */
+  .home-header { padding: 28px 32px 16px; }
+  .home-body   { padding: 4px 32px; }
+  #folder-list, #group-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 12px; padding-top: 4px; }
+  .folder-card, .group-card { margin-bottom: 0; }
+
+  /* Folder screen */
+  .folder-header { padding: 28px 32px 16px; }
+  .import-btn    { margin: 0 32px 16px; }
+  .cards-list    { padding: 0 32px; }
+  #cards-list    { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 10px; }
+  .card-item     { margin-bottom: 0; }
+
+  /* Study / Browse: limita largura do card */
+  .flip-area, .browse-flip-area { max-width: 640px; margin: 0 auto; }
+  .judge-row  { max-width: 640px; margin: 0 auto; }
+  .prev-row   { max-width: 640px; margin: 0 auto; }
+  .card-dots  { max-width: 640px; margin: 0 auto; }
+  .browse-nav-row .btn-browse-nav { max-width: 260px; }
+  .study-header { padding: 24px 32px 16px; }
+  .browse-header { padding: 24px 32px 16px; }
+
+  /* FAB e outros fixed */
+  .fab-wrap { right: 32px !important; }
+  .study-fab { left: calc(var(--dt-fixed-left, 260px) + 50%) !important; transform: translateX(-50%) !important; }
+  .study-fab:active { outline: 3px solid rgba(232,184,75,.5); opacity: .88; }
+  .done-overlay { left: var(--dt-fixed-left, 260px) !important; width: calc(100% - var(--dt-fixed-left, 260px)) !important; right: 0 !important; }
+  .modal-backdrop, .backup-modal-backdrop, .mode-modal-backdrop,
+  .cardlist-backdrop { left: var(--dt-fixed-left, 260px) !important; width: calc(100% - var(--dt-fixed-left, 260px)) !important; right: 0 !important; transform: none !important; }
+  .toast { left: calc(var(--dt-fixed-left, 260px) + 50%) !important; }
+  .browse-nav-row { left: var(--dt-fixed-left, 260px) !important; width: calc(100% - var(--dt-fixed-left, 260px)) !important; justify-content: center; padding-left: 32px; padding-right: 32px; }
+  .browse-nav-row .btn-browse-nav { flex: 0 1 260px; }
+
+  /* Esconde botão 𝐀 no desktop */
+  #btn-zoom { display: none; }
+}
+
+/* Mobile: esconde sidebar desktop */
+#dt-sidebar  { display: none; }
+#dt-content  { display: contents; }
+
+.screen { position: fixed; inset: 0; display: none; flex-direction: column; overflow-y: auto; -webkit-overflow-scrolling: touch; z-index: 1; }
+.screen.active { display: flex; }
+
+/* ══════ HOME ══════ */
+#s-home { padding: 0 0 100px; }
+.home-header { padding: 28px 24px 16px; background: linear-gradient(180deg, var(--surface) 0%, transparent 100%); position: sticky; top: 0; z-index: 10; }
+.logo-wrap { display: flex; align-items: baseline; gap: 6px; margin-bottom: 2px; }
+.logo-main { font-family: 'Playfair Display', serif; font-size: 1.6rem; font-weight: 900; background: linear-gradient(135deg, var(--gold), var(--gold2)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; letter-spacing: -.02em; }
+.logo-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--teal); margin-bottom: 4px; }
+.home-sub { font-size: .75rem; color: var(--muted); font-weight: 400; letter-spacing: .03em; }
+.home-body { padding: 4px 20px; }
+.tab-row { display: flex; gap: 8px; margin: 16px 0 4px; }
+.tab-btn { flex: 1; padding: 9px 0; border-radius: 12px; border: 1px solid var(--border); background: var(--surface2); color: var(--muted); font-family: 'Outfit', sans-serif; font-size: .82rem; font-weight: 600; cursor: pointer; transition: all .2s; }
+.tab-btn.active { background: rgba(232,184,75,.1); border-color: rgba(232,184,75,.4); color: var(--gold); }
+.tab-btn:active { transform: scale(.97); }
+.section-label { font-size: .7rem; font-weight: 600; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); padding: 16px 0 12px; }
+
+/* FAB */
+.fab-wrap { position: fixed; bottom: calc(28px + env(safe-area-inset-bottom, 0px)); right: calc(20px + env(safe-area-inset-right, 0px)); display: flex; flex-direction: column; gap: 10px; z-index: 100; align-items: flex-end; }
+.fab { width: 56px; height: 56px; border-radius: 18px; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; box-shadow: 0 8px 32px rgba(0,0,0,.4); transition: transform .18s; }
+.fab:active { transform: scale(.93); }
+.fab-folder { background: linear-gradient(135deg, var(--gold), #d4a030); }
+.fab-group  { background: linear-gradient(135deg, var(--purple), #7c3aed); }
+.fab-label { font-size: .6rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; margin-top: 2px; text-align: center; }
+.fab-label.lbl-folder { color: var(--gold); }
+.fab-label.lbl-group  { color: var(--purple); }
+
+/* GROUP CARD */
+.group-card { background: var(--surface); border: 1px solid rgba(167,139,250,.25); border-radius: var(--radius); padding: 18px 20px; margin-bottom: 12px; display: flex; align-items: center; gap: 16px; cursor: pointer; transition: all .22s; position: relative; overflow: hidden; animation: slideIn .35s ease both; }
+.group-card::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; background: linear-gradient(180deg, var(--purple), var(--teal)); border-radius: 3px 0 0 3px; opacity: 0; transition: opacity .22s; }
+
+/* Coleção = grupo que contém outros grupos (esverdeado) */
+.group-card.collection { position: relative; }
+.collection-badge {
+  position: absolute; top: 10px; right: 14px;
+  font-size: .95rem; opacity: .75;
+}
+.collection-tag {
+  font-size: .68rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase;
+  color: var(--muted); margin-top: 2px;
+}
+
+/* Filtro Pastas/Grupos dentro da aba Grupos */
+.group-filter-row { display: flex; gap: 8px; margin-bottom: 14px; }
+.group-filter-chip {
+  padding: 7px 14px; border-radius: 20px; border: 1.5px solid var(--border);
+  background: var(--surface2); color: var(--muted);
+  font-family: 'Outfit', sans-serif; font-size: .78rem; font-weight: 600;
+  cursor: pointer; transition: all .18s; display:flex; align-items:center; gap:5px;
+}
+.group-filter-chip.active.type-group      { border-color: var(--gold); background: rgba(232,184,75,.12); color: var(--gold); }
+.group-filter-chip.active.type-collection { border-color: var(--muted); background: rgba(110,110,150,.12); color: var(--text); }
+
+/* Tabs de tipo no criar/editar grupo */
+.grouptype-tab-row { display: flex; gap: 8px; margin-bottom: 12px; }
+.grouptype-tab {
+  flex: 1; padding: 10px 0; text-align: center; border-radius: 12px;
+  border: 1.5px solid var(--border); background: var(--surface2); color: var(--muted);
+  font-family: 'Outfit', sans-serif; font-size: .85rem; font-weight: 600;
+  cursor: pointer; transition: all .18s;
+}
+.grouptype-tab.active.type-group      { border-color: var(--gold); background: rgba(232,184,75,.1); color: var(--gold); }
+.grouptype-tab.active.type-collection { border-color: var(--muted); background: rgba(110,110,150,.1); color: var(--text); }
+.group-card:active { transform: scale(.98); }
+.group-card:active::before { opacity: 1; }
+.group-icon-wrap { width: 48px; height: 48px; border-radius: 14px; background: rgba(167,139,250,.1); border: 1px solid rgba(167,139,250,.25); display: flex; align-items: center; justify-content: center; font-size: 1.4rem; flex-shrink: 0; }
+.group-info { flex: 1; min-width: 0; }
+.group-title { font-family: 'Playfair Display', serif; font-size: 1.05rem; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 2px; }
+.group-meta { font-size: .75rem; color: var(--muted); }
+.group-arrow { color: var(--muted); font-size: 1rem; flex-shrink: 0; transition: transform .22s; }
+.group-card:active .group-arrow { transform: translateX(4px); color: var(--purple); }
+
+/* FOLDER CARD */
+.folder-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 18px 20px; margin-bottom: 12px; display: flex; align-items: center; gap: 16px; cursor: pointer; transition: all .22s; position: relative; overflow: hidden; animation: slideIn .35s ease both; }
+.folder-card::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; background: linear-gradient(180deg, var(--gold), var(--teal)); border-radius: 3px 0 0 3px; opacity: 0; transition: opacity .22s; }
+.folder-card:active { transform: scale(.98); }
+.folder-card:active::before { opacity: 1; }
+.folder-icon { width: 48px; height: 48px; border-radius: 14px; background: var(--surface2); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; font-size: 1.4rem; flex-shrink: 0; }
+.folder-info { flex: 1; min-width: 0; }
+.folder-title { font-family: 'Playfair Display', serif; font-size: 1.05rem; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 2px; min-width: 0; }
+.folder-meta { font-size: .75rem; color: var(--muted); }
+.folder-arrow { color: var(--muted); font-size: 1rem; flex-shrink: 0; transition: transform .22s; }
+.folder-card:active .folder-arrow { transform: translateX(4px); color: var(--gold); }
+.folder-actions { display: flex; gap: 8px; flex-shrink: 0; }
+
+/* ── EDIT GROUP BUTTON ── */
+.btn-edit-group {
+  width: 36px; height: 36px; border-radius: 10px;
+  background: rgba(167,139,250,.1); border: 1.5px solid rgba(167,139,250,.3);
+  color: var(--purple); cursor: pointer; font-size: .85rem;
+  display: flex; align-items: center; justify-content: center;
+  transition: all .2s; flex-shrink: 0;
+}
+.btn-edit-group:active { background: rgba(167,139,250,.22); transform: scale(.93); }
+
+/* ── HOLD-TO-DELETE BUTTON ── */
+.btn-delete {
+  width: 36px; height: 36px; border-radius: 10px;
+  background: var(--surface2); border: 1.5px solid var(--border);
+  color: var(--muted); cursor: pointer; font-size: .85rem;
+  display: flex; align-items: center; justify-content: center;
+  position: relative; overflow: hidden; transition: border-color .2s, color .2s;
+  flex-shrink: 0; user-select: none; -webkit-user-select: none;
+}
+.btn-delete .del-ring {
+  position: absolute; inset: 0; border-radius: 10px;
+  background: conic-gradient(var(--rose) 0%, transparent 0%);
+  opacity: 0; transition: opacity .15s;
+}
+.btn-delete.holding { border-color: var(--rose); color: var(--rose); }
+.btn-delete.holding .del-ring { opacity: 1; }
+.btn-delete .del-icon { position: relative; z-index: 1; pointer-events: none; }
+
+.empty { text-align: center; padding: 60px 32px 20px; animation: fadeIn .4s ease; }
+.empty-icon { font-size: 3.5rem; margin-bottom: 16px; display: block; }
+.empty-title { font-family: 'Playfair Display', serif; font-size: 1.3rem; margin-bottom: 8px; }
+.empty-sub { font-size: .85rem; color: var(--muted); line-height: 1.6; }
+
+/* ══════ SHARED HEADER ══════ */
+.screen-header { padding: 56px 20px 20px; display: flex; align-items: center; gap: 14px; background: var(--surface); border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 10; }
+.btn-back { width: 40px; height: 40px; border-radius: 12px; background: var(--surface2); border: 1px solid var(--border); color: var(--muted); cursor: pointer; font-size: 1.1rem; display: flex; align-items: center; justify-content: center; transition: all .2s; flex-shrink: 0; }
+.btn-back:active { color: var(--text); border-color: var(--gold); }
+.screen-title { font-family: 'Playfair Display', serif; font-size: 1.3rem; font-weight: 700; }
+.form-body { padding: 28px 20px; }
+.field { margin-bottom: 24px; }
+.field-label { font-size: .75rem; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); margin-bottom: 10px; display: block; }
+.field-input { width: 100%; background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 14px 16px; color: var(--text); font-family: 'Outfit', sans-serif; font-size: 1rem; outline: none; transition: border-color .2s; }
+.field-input:focus { border-color: var(--gold); }
+.field-input::placeholder { color: var(--muted); }
+.emoji-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 10px; }
+.emoji-opt { aspect-ratio: 1; background: var(--surface); border: 2px solid var(--border); border-radius: 12px; cursor: pointer; font-size: 1.3rem; display: flex; align-items: center; justify-content: center; transition: all .18s; }
+.emoji-opt.selected { border-color: var(--gold); background: rgba(232,184,75,.1); }
+.emoji-opt:active { transform: scale(.92); }
+.format-box { background: var(--surface2); border: 1px solid var(--border); border-radius: 16px; padding: 16px 18px; margin-bottom: 10px; }
+.format-box-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+.format-box-label { font-size: .7rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--gold); display: flex; align-items: center; gap: 6px; }
+.btn-copy-fmt { background: rgba(232,184,75,.1); border: 1px solid rgba(232,184,75,.25); border-radius: 8px; padding: 5px 14px; font-family: 'Outfit', sans-serif; font-size: .72rem; font-weight: 600; color: var(--gold); cursor: pointer; transition: all .18s; }
+.btn-copy-fmt:active { background: rgba(232,184,75,.22); transform: scale(.96); }
+.format-preview { font-family: 'Courier New', monospace; font-size: .76rem; line-height: 1.9; color: var(--muted); border-left: 2px solid var(--border); padding-left: 12px; white-space: pre; }
+.format-preview .kw { color: var(--teal); font-weight: 700; }
+.format-preview .num { color: var(--gold); }
+.cards-textarea { width: 100%; background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 14px 16px; color: var(--text); font-family: 'Outfit', sans-serif; font-size: .85rem; line-height: 1.65; height: 200px; resize: none; outline: none; transition: border-color .2s; }
+.cards-textarea:focus { border-color: var(--gold); }
+.cards-textarea::placeholder { color: var(--muted); font-size: .82rem; }
+.btn-primary { width: 100%; padding: 16px; background: linear-gradient(135deg, var(--gold), #d4a030); border: none; border-radius: 16px; cursor: pointer; font-family: 'Outfit', sans-serif; font-size: 1rem; font-weight: 600; color: #0a0a0f; transition: all .2s; margin-top: 8px; }
+.btn-primary:active { transform: scale(.97); opacity: .9; }
+.btn-primary-purple { background: linear-gradient(135deg, var(--purple), #7c3aed); color: #fff; }
+
+/* ══════ CREATE GROUP ══════ */
+#s-create-group { padding-bottom: 60px; }
+.folder-picker { display: flex; flex-direction: column; gap: 10px; }
+.pick-item { background: var(--surface); border: 1.5px solid var(--border); border-radius: 16px; padding: 14px 16px; display: flex; align-items: center; gap: 14px; cursor: pointer; transition: all .2s; }
+.pick-item.selected { border-color: var(--purple); background: rgba(167,139,250,.08); }
+.pick-item:active { transform: scale(.98); }
+.pick-check { width: 22px; height: 22px; border-radius: 7px; border: 2px solid var(--border); display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: all .2s; font-size: .8rem; color: transparent; }
+.pick-item.selected .pick-check { background: var(--purple); border-color: var(--purple); color: #fff; }
+.pick-icon { font-size: 1.2rem; flex-shrink: 0; }
+.pick-info { flex: 1; min-width: 0; }
+.pick-name { font-size: .92rem; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pick-sub  { font-size: .72rem; color: var(--muted); }
+.pick-empty { text-align: center; padding: 28px 20px; color: var(--muted); font-size: .88rem; }
+
+/* ══════ GROUP SCREEN ══════ */
+#s-group { padding-bottom: 100px; }
+.group-header { padding: 56px 20px 20px; background: var(--surface); border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 10; }
+.group-header-top { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+.group-header-icon { width: 44px; height: 44px; border-radius: 14px; background: rgba(167,139,250,.1); border: 1px solid rgba(167,139,250,.25); display: flex; align-items: center; justify-content: center; font-size: 1.3rem; flex-shrink: 0; }
+.group-header-name { font-family: 'Playfair Display', serif; font-size: 1.3rem; font-weight: 700; flex: 1; }
+.stats-row { display: flex; gap: 10px; flex-wrap: wrap; }
+.stat-chip { background: var(--surface2); border: 1px solid var(--border); border-radius: 99px; padding: 6px 14px; font-size: .75rem; color: var(--muted); font-weight: 500; display: flex; align-items: center; gap: 5px; }
+.stat-chip b { color: var(--text); }
+.group-folders-list { padding: 16px 20px; }
+.gf-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px 18px; margin-bottom: 10px; display: flex; align-items: center; gap: 14px; cursor: pointer; transition: all .22s; animation: slideIn .3s ease both; }
+.gf-card:active { transform: scale(.98); background: var(--surface2); }
+.gf-icon { width: 42px; height: 42px; border-radius: 12px; background: var(--surface2); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; font-size: 1.2rem; flex-shrink: 0; }
+.gf-info { flex: 1; min-width: 0; }
+.gf-name { font-family: 'Playfair Display', serif; font-size: .98rem; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 1px; }
+.gf-sub { font-size: .72rem; color: var(--muted); }
+.gf-arrow { color: var(--muted); font-size: .9rem; flex-shrink: 0; transition: transform .22s; }
+.gf-card:active .gf-arrow { transform: translateX(4px); color: var(--gold); }
+
+/* ══════ FOLDER SCREEN ══════ */
+#s-folder { padding-bottom: 100px; }
+.folder-header { padding: 32px 20px 11px; background: var(--surface); border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 10; }
+.folder-header-top { display: flex; align-items: center; gap: 8px; margin-bottom: 9px; }
+.folder-header-icon { width: 26px; height: 26px; border-radius: 8px; background: var(--surface2); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; font-size: .75rem; flex-shrink: 0; }
+.folder-header-name { font-family: 'Playfair Display', serif; font-size: 1.125rem; font-weight: 700; flex: 1; }
+
+/* ── IMPORT BUTTON (no longer a collapsible panel) ── */
+.import-btn {
+  margin: 16px 20px 0;
+  background: var(--surface);
+  border: 1px dashed var(--border);
+  border-radius: var(--radius);
+  padding: 14px 18px;
+  display: flex; align-items: center; justify-content: space-between;
+  cursor: pointer; user-select: none; transition: border-color .2s;
+}
+.import-btn:active { border-color: var(--gold); }
+.import-btn-label { font-size: .85rem; font-weight: 500; display: flex; align-items: center; gap: 8px; }
+.import-btn-arrow { color: var(--muted); font-size: .85rem; }
+
+.cards-list { padding: 12px 20px; }
+.card-item { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); margin-bottom: 10px; overflow: hidden; cursor: pointer; transition: all .22s; animation: slideIn .3s ease both; -webkit-user-select: none; user-select: none; position: relative; }
+.card-hold-bar {
+  position: absolute; bottom: 0; left: 0;
+  height: 3px; width: 0%; border-radius: 0 0 3px 3px;
+  background: linear-gradient(90deg, var(--gold), var(--gold2));
+  transition: none; pointer-events: none; opacity: 0;
+}
+.card-item:active { transform: scale(.98); }
+.card-item-front { padding: 16px 18px; display: flex; align-items: flex-start; gap: 12px; }
+.card-num-badge { background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 3px 8px; font-size: .68rem; font-weight: 600; color: var(--gold); flex-shrink: 0; margin-top: 1px; }
+.card-question { font-size: .9rem; line-height: 1.5; font-weight: 500; flex: 1; }
+.card-expand-icon { color: var(--muted); font-size: .8rem; flex-shrink: 0; transition: transform .25s; }
+.card-item-back { max-height: 0; overflow: hidden; transition: max-height .35s ease, padding .35s ease; background: var(--surface2); }
+.card-item.open .card-item-back { max-height: 300px; padding: 14px 18px 16px 38px; }
+.card-item.open .card-expand-icon { transform: rotate(90deg); }
+.card-item.open { border-color: rgba(232,184,75,.3); }
+.card-answer-label { font-size: .65rem; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; color: var(--teal); margin-bottom: 6px; }
+.card-answer-text { font-size: .88rem; line-height: 1.6; }
+.study-fab { position: fixed; bottom: calc(28px + env(safe-area-inset-bottom, 0px)); left: 50%; transform: translateX(-50%); padding: 14px 32px; background: linear-gradient(135deg, var(--gold), #d4a030); border: none; border-radius: 99px; cursor: pointer; font-family: 'Outfit', sans-serif; font-size: .95rem; font-weight: 600; color: #0a0a0f; box-shadow: 0 8px 32px rgba(232,184,75,.35), 0 2px 8px rgba(0,0,0,.5); transition: all .2s; display: none; white-space: nowrap; z-index: 100; }
+.study-fab.visible { display: block; }
+.study-fab:active { transform: translateX(-50%) scale(.96); }
+
+/* ══════ ADD CARDS MODAL ══════ */
+.modal-backdrop {
+  position: fixed; inset: 0; z-index: 300;
+  background: rgba(0,0,0,.75);
+  backdrop-filter: blur(6px);
+  display: none; align-items: flex-end; justify-content: center;
+  animation: fadeIn .2s ease;
+}
+.modal-backdrop.open { display: flex; }
+.modal-sheet {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 28px 28px 0 0;
+  width: 100%; max-width: 680px;
+  max-height: 92vh;
+  display: flex; flex-direction: column;
+  animation: slideUp .3s cubic-bezier(.4,0,.2,1);
+}
+.modal-handle {
+  width: 40px; height: 4px; border-radius: 99px;
+  background: var(--border); margin: 14px auto 0; flex-shrink: 0;
+}
+.modal-header {
+  padding: 16px 20px;
+  display: flex; align-items: center; justify-content: space-between;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+.modal-title { font-family: 'Playfair Display', serif; font-size: 1.15rem; font-weight: 700; }
+.modal-close { width: 32px; height: 32px; border-radius: 10px; background: var(--surface2); border: 1px solid var(--border); color: var(--muted); cursor: pointer; font-size: .9rem; display: flex; align-items: center; justify-content: center; }
+.modal-body { padding: 16px 20px 28px; overflow-y: auto; flex: 1; }
+.modal-format-box { background: var(--surface2); border: 1px solid var(--border); border-radius: 14px; padding: 14px 16px; margin-bottom: 14px; }
+.modal-format-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+.modal-format-label { font-size: .68rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--gold); }
+.modal-textarea { width: 100%; background: var(--bg); border: 1px solid var(--border); border-radius: 14px; padding: 14px 16px; color: var(--text); font-family: 'Outfit', sans-serif; font-size: .85rem; line-height: 1.65; height: 200px; resize: none; outline: none; transition: border-color .2s; margin-bottom: 14px; box-sizing: border-box; }
+.modal-textarea:focus { border-color: var(--gold); }
+.modal-textarea::placeholder { color: var(--muted); }
+.modal-actions { display: flex; gap: 10px; }
+.btn-modal-cancel { flex: 1; padding: 14px; border-radius: 14px; background: var(--surface2); border: 1px solid var(--border); color: var(--muted); font-family: 'Outfit', sans-serif; font-size: .9rem; font-weight: 600; cursor: pointer; }
+.btn-modal-add { flex: 2; padding: 14px; border-radius: 14px; background: linear-gradient(135deg, var(--gold), #d4a030); border: none; color: #0a0a0f; font-family: 'Outfit', sans-serif; font-size: .9rem; font-weight: 700; cursor: pointer; }
+.btn-modal-cancel:active { transform: scale(.97); }
+.btn-modal-add:active { transform: scale(.97); }
+
+/* ══════ STUDY ══════ */
+#s-study { background: var(--bg); padding-bottom: 30px; }
+.study-header { padding: 52px 20px 16px; display: flex; align-items: center; gap: 12px; position: sticky; top: 0; z-index: 10; background: var(--bg); }
+.study-progress-track { flex: 1; height: 4px; background: var(--surface2); border-radius: 99px; overflow: hidden; }
+.study-progress-fill { height: 100%; border-radius: 99px; background: linear-gradient(90deg, var(--gold), var(--teal)); transition: width .4s ease; }
+.study-counter { font-size: .78rem; color: var(--muted); font-weight: 500; white-space: nowrap; }
+
+/* ── ADAPTIVE FLIP CARD ── */
+.flip-area { padding: 20px 20px 0; perspective: 1200px; }
+
+/* Outer wrapper measures height via the ghost — does NOT rotate */
+.flip-card-outer {
+  width: 100%;
+  position: relative;
+  min-height: 160px;
+  cursor: pointer;
+}
+
+/* Ghost: invisible copy of both texts, drives the height */
+.flip-ghost {
+  visibility: hidden;
+  pointer-events: none;
+  padding: 28px 24px;
+  display: flex; flex-direction: column; align-items: center;
+  gap: 8px;
+}
+.flip-ghost .face-text { text-align: center; }
+
+/* Inner container: sits on top of ghost, rotates */
+.flip-card {
+  position: absolute; inset: 0;
+  transform-style: preserve-3d;
+  transition: transform .55s cubic-bezier(.4,0,.2,1);
+}
+.flip-card.flipped { transform: rotateY(180deg); }
+
+.flip-face {
+  position: absolute; inset: 0;
+  border-radius: 24px;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  padding: 28px 24px;
+  backface-visibility: hidden; -webkit-backface-visibility: hidden;
+}
+.flip-front { background: var(--surface); border: 1px solid var(--border); }
+.flip-back  {
+  background: linear-gradient(135deg, #1a1a2e, #16213e);
+  border: 1px solid rgba(78,205,196,.25);
+  /* rotated 180° so it faces viewer when card is flipped */
+  transform: rotateY(180deg);
+}
+
+.face-badge { font-size: .65rem; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; padding: 4px 12px; border-radius: 99px; margin-bottom: 16px; flex-shrink: 0; }
+.flip-front .face-badge { background: rgba(232,184,75,.1); color: var(--gold); }
+.flip-back  .face-badge { background: rgba(78,205,196,.1); color: var(--teal); }
+.face-text { font-size: 1.05rem; line-height: 1.55; text-align: center; font-weight: 400; word-break: break-word; }
+
+.tap-hint { text-align: center; padding: 10px 0 0; font-size: .72rem; color: var(--muted); display: flex; align-items: center; justify-content: center; gap: 5px; transition: opacity .3s; }
+.tap-hint.hidden { opacity: 0; pointer-events: none; }
+.card-dots { display: flex; gap: 5px; justify-content: center; padding: 12px 20px 0; flex-wrap: wrap; }
+.dot { width: 7px; height: 7px; border-radius: 99px; background: var(--border); transition: all .3s; }
+.dot.current { background: var(--gold); width: 20px; }
+.dot.correct { background: var(--green); }
+.dot.wrong { background: var(--rose); }
+.judge-row { display: flex; gap: 12px; padding: 14px 20px 0; opacity: 0; pointer-events: none; transform: translateY(10px); transition: opacity .35s ease, transform .35s ease; }
+.judge-row.show { opacity: 1; pointer-events: auto; transform: translateY(0); }
+.btn-judge { flex: 1; padding: 16px 10px; border: none; border-radius: 18px; cursor: pointer; font-family: 'Outfit', sans-serif; font-size: 1rem; font-weight: 700; display: flex; align-items: center; justify-content: center; gap: 8px; transition: all .2s; }
+.btn-wrong   { background: rgba(255,107,138,.1); border: 1.5px solid rgba(255,107,138,.3); color: var(--rose); }
+.btn-correct { background: rgba(62,207,142,.1);  border: 1.5px solid rgba(62,207,142,.3);  color: var(--green); }
+.btn-judge:active { transform: scale(.94); }
+.btn-wrong:active   { background: rgba(255,107,138,.22); }
+.btn-correct:active { background: rgba(62,207,142,.22); }
+
+/* prev card button */
+.prev-row { padding: 10px 20px 0; display: flex; justify-content: center; }
+.btn-prev {
+  background: none; border: none; cursor: pointer;
+  font-family: 'Outfit', sans-serif; font-size: .8rem;
+  color: var(--muted); padding: 8px 16px; border-radius: 10px;
+  transition: all .2s;
+}
+.btn-prev:not(:disabled):hover { color: var(--text); }
+.btn-prev:disabled { opacity: .25; cursor: default; }
+
+/* ══════ RESULT ══════ */
+.done-overlay { position: fixed; inset: 0; z-index: 200; background: var(--bg); display: none; flex-direction: column; align-items: center; justify-content: flex-start; padding: 60px 28px 40px; text-align: center; overflow-y: auto; }
+.done-overlay.show { display: flex; }
+.result-emoji { font-size: 3.8rem; margin-bottom: 12px; animation: popIn .5s cubic-bezier(.175,.885,.32,1.275) both; }
+.result-title { font-family: 'Playfair Display', serif; font-size: 1.8rem; margin-bottom: 6px; background: linear-gradient(135deg, var(--gold), var(--gold2)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+.result-sub { font-size: .85rem; color: var(--muted); margin-bottom: 28px; }
+.score-ring-wrap { position: relative; width: 150px; height: 150px; margin: 0 auto 24px; }
+.score-ring-wrap svg { transform: rotate(-90deg); }
+.ring-bg { fill: none; stroke: var(--surface2); stroke-width: 10; }
+.ring-fill { fill: none; stroke-width: 10; stroke-linecap: round; transition: stroke-dashoffset 1.1s cubic-bezier(.4,0,.2,1); }
+.score-center { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+.score-pct { font-family: 'Playfair Display', serif; font-size: 2.2rem; font-weight: 900; line-height: 1; }
+.score-label { font-size: .7rem; color: var(--muted); margin-top: 4px; letter-spacing: .05em; }
+.score-chips { display: flex; gap: 12px; margin-bottom: 24px; width: 100%; max-width: 320px; }
+.score-chip { flex: 1; padding: 14px 10px; border-radius: 16px; text-align: center; }
+.chip-correct { background: rgba(62,207,142,.08); border: 1px solid rgba(62,207,142,.2); }
+.chip-wrong   { background: rgba(255,107,138,.08); border: 1px solid rgba(255,107,138,.2); }
+.chip-num { font-family: 'Playfair Display', serif; font-size: 1.6rem; font-weight: 700; margin-bottom: 2px; }
+.chip-correct .chip-num { color: var(--green); }
+.chip-wrong   .chip-num { color: var(--rose); }
+.chip-lbl { font-size: .72rem; color: var(--muted); }
+.chip-tap { font-size: .6rem; color: var(--muted); margin-top: 4px; opacity: .7; }
+.chip-correct:active { background: rgba(62,207,142,.18); transform: scale(.97); }
+.chip-wrong:active   { background: rgba(255,107,138,.18); transform: scale(.97); }
+
+/* ══════ CARD LIST MODAL ══════ */
+.cardlist-backdrop {
+  position: fixed; inset: 0; z-index: 400;
+  background: rgba(0,0,0,.8); backdrop-filter: blur(6px);
+  display: none; align-items: flex-end; justify-content: center;
+}
+.cardlist-backdrop.open { display: flex; }
+.cardlist-sheet {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 28px 28px 0 0; width: 100%; max-height: 85vh;
+  overflow-y: auto; padding: 0 0 32px;
+  animation: slideUp .3s cubic-bezier(.4,0,.2,1);
+}
+.cardlist-handle { width: 40px; height: 4px; border-radius: 99px; background: var(--border); margin: 14px auto 0; }
+.cardlist-header {
+  padding: 16px 20px 14px;
+  display: flex; align-items: center; justify-content: space-between;
+  border-bottom: 1px solid var(--border); position: sticky; top: 0;
+  background: var(--surface); z-index: 1;
+}
+.cardlist-title { font-family: 'Playfair Display', serif; font-size: 1.1rem; font-weight: 700; display: flex; align-items: center; gap: 8px; }
+.cardlist-close { width: 32px; height: 32px; border-radius: 10px; background: var(--surface2); border: 1px solid var(--border); color: var(--muted); cursor: pointer; font-size: .9rem; display: flex; align-items: center; justify-content: center; }
+.cardlist-body { padding: 12px 16px; }
+.cardlist-item {
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 16px; padding: 14px 16px; margin-bottom: 10px;
+  cursor: pointer; transition: all .2s;
+}
+.cardlist-item:active { transform: scale(.98); }
+.cardlist-item.cl-correct { border-color: rgba(62,207,142,.3); }
+.cardlist-item.cl-wrong   { border-color: rgba(255,107,138,.3); }
+.cardlist-q { font-size: .88rem; font-weight: 600; margin-bottom: 6px; line-height: 1.4; }
+.cardlist-a { font-size: .78rem; color: var(--muted); line-height: 1.45; display: none; }
+.cardlist-item.open .cardlist-a { display: block; }
+.cardlist-expand { font-size: .65rem; color: var(--muted); margin-top: 4px; }
+.cardlist-footer { padding: 0 16px; }
+.btn-retry-wrong {
+  width: 100%; padding: 15px; border-radius: 16px; border: none; cursor: pointer;
+  background: linear-gradient(135deg, var(--rose), #c0394f);
+  color: #fff; font-family: 'Outfit', sans-serif; font-size: .95rem; font-weight: 700;
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  transition: all .2s;
+}
+.btn-retry-wrong:active { transform: scale(.97); opacity: .9; }
+.result-msg { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 16px 20px; font-size: .88rem; line-height: 1.6; color: var(--muted); margin-bottom: 24px; width: 100%; max-width: 320px; text-align: left; }
+.result-msg strong { color: var(--text); }
+.done-btns { display: flex; flex-direction: column; gap: 12px; width: 100%; max-width: 320px; }
+
+/* ══════ BACKUP MODAL ══════ */
+.backup-modal-backdrop {
+  position: fixed; inset: 0; z-index: 300;
+  background: rgba(0,0,0,.75); backdrop-filter: blur(6px);
+  display: none; align-items: flex-end; justify-content: center;
+}
+.backup-modal-backdrop.open { display: flex; }
+.backup-sheet {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 28px 28px 0 0; width: 100%; max-height: 85vh;
+  overflow-y: auto; padding: 0 20px 40px;
+  animation: slideUp .3s cubic-bezier(.4,0,.2,1);
+}
+.backup-handle { width: 40px; height: 4px; border-radius: 99px; background: var(--border); margin: 14px auto 20px; }
+.backup-title { font-family: 'Playfair Display', serif; font-size: 1.2rem; font-weight: 700; margin-bottom: 4px; }
+.backup-sub { font-size: .8rem; color: var(--muted); margin-bottom: 24px; line-height: 1.5; }
+.backup-section { margin-bottom: 20px; }
+.backup-section-label { font-size: .7rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); margin-bottom: 12px; display: flex; align-items: center; gap: 6px; }
+.backup-info-box { background: var(--surface2); border: 1px solid var(--border); border-radius: 14px; padding: 14px 16px; margin-bottom: 12px; }
+.backup-info-row { display: flex; justify-content: space-between; align-items: center; font-size: .85rem; }
+.backup-info-row + .backup-info-row { margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--border); }
+.backup-info-key { color: var(--muted); }
+.backup-info-val { font-weight: 600; color: var(--text); }
+.btn-backup-action {
+  width: 100%; padding: 15px; border-radius: 16px; border: none; cursor: pointer;
+  font-family: 'Outfit', sans-serif; font-size: .95rem; font-weight: 700;
+  display: flex; align-items: center; justify-content: center; gap: 10px;
+  transition: all .2s; margin-bottom: 10px;
+}
+.btn-backup-export { background: linear-gradient(135deg, var(--gold), #d4a030); color: #0a0a0f; }
+.btn-backup-import { background: var(--surface2); border: 1.5px solid var(--border); color: var(--text); }
+.btn-backup-action:active { transform: scale(.97); opacity: .9; }
+.backup-warn { font-size: .75rem; color: var(--muted); text-align: center; line-height: 1.5; margin-top: 4px; }
+.btn-backup-cancel { width: 100%; padding: 14px; border-radius: 14px; background: transparent; border: 1px solid var(--border); color: var(--muted); font-family: 'Outfit', sans-serif; font-size: .9rem; font-weight: 600; cursor: pointer; margin-top: 6px; }
+.btn-backup-cancel:active { transform: scale(.97); }
+.btn-backup-home {
+  width: 38px; height: 38px; border-radius: 12px;
+  background: var(--surface2); border: 1px solid var(--border);
+  color: var(--muted); cursor: pointer; font-size: 1rem;
+  display: flex; align-items: center; justify-content: center;
+  transition: all .2s; flex-shrink: 0;
+}
+.btn-backup-home:active { color: var(--gold); border-color: rgba(232,184,75,.4); }
+.logo-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px; }
+
+/* TOAST */
+.toast { position: fixed; bottom: 100px; left: 50%; transform: translateX(-50%) translateY(20px); background: var(--surface2); border: 1px solid var(--border); border-radius: 99px; padding: 10px 20px; font-size: .82rem; white-space: nowrap; opacity: 0; transition: all .3s; z-index: 999; pointer-events: none; }
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+/* ══════ MODE PICKER MODAL ══════ */
+.mode-modal-backdrop {
+  position: fixed; inset: 0; z-index: 300;
+  background: rgba(0,0,0,.75);
+  backdrop-filter: blur(6px);
+  display: none; align-items: flex-end; justify-content: center;
+  animation: fadeIn .2s ease;
+}
+.mode-modal-backdrop.open { display: flex; }
+.mode-sheet {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 28px 28px 0 0;
+  width: 100%;
+  padding: 0 20px 40px;
+  animation: slideUp .3s cubic-bezier(.4,0,.2,1);
+}
+.mode-handle { width: 40px; height: 4px; border-radius: 99px; background: var(--border); margin: 14px auto 24px; }
+.mode-title { font-family: 'Playfair Display', serif; font-size: 1.2rem; font-weight: 700; text-align: center; margin-bottom: 6px; }
+.mode-subtitle { font-size: .8rem; color: var(--muted); text-align: center; margin-bottom: 24px; }
+.mode-options { display: flex; flex-direction: column; gap: 12px; margin-bottom: 16px; }
+.mode-option {
+  background: var(--surface2);
+  border: 1.5px solid var(--border);
+  border-radius: 20px;
+  padding: 20px 20px;
+  cursor: pointer;
+  transition: all .22s;
+  display: flex; align-items: center; gap: 16px;
+}
+.mode-option:active { transform: scale(.98); }
+.mode-option.mode-browse { border-color: rgba(78,205,196,.35); }
+.mode-option.mode-browse:active { background: rgba(78,205,196,.08); }
+.mode-option.mode-test { border-color: rgba(232,184,75,.35); }
+.mode-option.mode-test:active { background: rgba(232,184,75,.08); }
+.mode-option-icon { font-size: 2rem; flex-shrink: 0; }
+.mode-option-info { flex: 1; }
+.mode-option-name { font-family: 'Playfair Display', serif; font-size: 1.05rem; font-weight: 700; margin-bottom: 4px; }
+.mode-option-desc { font-size: .78rem; color: var(--muted); line-height: 1.45; }
+.mode-option-badge { font-size: .65rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; padding: 4px 10px; border-radius: 99px; flex-shrink: 0; }
+.mode-browse .mode-option-badge { background: rgba(78,205,196,.12); color: var(--teal); }
+.mode-test .mode-option-badge { background: rgba(232,184,75,.12); color: var(--gold); }
+.btn-mode-cancel { width: 100%; padding: 14px; border-radius: 14px; background: transparent; border: 1px solid var(--border); color: var(--muted); font-family: 'Outfit', sans-serif; font-size: .9rem; font-weight: 600; cursor: pointer; }
+.btn-mode-cancel:active { transform: scale(.97); }
+
+/* ══════ BROWSE MODE ══════ */
+#s-browse { background: var(--bg); padding-bottom: 30px; }
+.browse-header { padding: 52px 20px 16px; display: flex; align-items: center; gap: 12px; position: sticky; top: 0; z-index: 10; background: var(--bg); }
+.browse-mode-badge { font-size: .65rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; background: rgba(78,205,196,.12); color: var(--teal); border: 1px solid rgba(78,205,196,.25); border-radius: 99px; padding: 4px 10px; white-space: nowrap; }
+
+.browse-flip-area { padding: 16px 20px 0; perspective: 1200px; }
+
+.browse-nav-row {
+  position: fixed;
+  bottom: 0;
+  left: env(safe-area-inset-left, 0px);
+  right: env(safe-area-inset-right, 0px);
+  display: flex; gap: 12px;
+  padding: 12px 20px calc(28px + env(safe-area-inset-bottom, 0px));
+  background: linear-gradient(0deg, var(--bg) 70%, transparent 100%);
+  z-index: 50;
+}
+#s-browse { padding-bottom: calc(110px + env(safe-area-inset-bottom, 0px)); }
+.btn-browse-nav {
+  flex: 1; padding: 18px 10px;
+  border-radius: 20px; border: none; cursor: pointer;
+  font-family: 'Outfit', sans-serif; font-size: 1.3rem; font-weight: 700;
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  transition: all .2s;
+}
+.btn-browse-prev {
+  background: var(--surface); border: 1.5px solid var(--border); color: var(--muted);
+}
+.btn-browse-next {
+  background: var(--surface); border: 1.5px solid var(--border); color: var(--text);
+}
+.btn-browse-nav:active { transform: scale(.94); }
+.btn-browse-nav:disabled { opacity: .25; cursor: default; transform: none; }
+.btn-browse-nav-label { font-size: .75rem; font-weight: 600; }
+
+.browse-tap-hint { text-align: center; padding: 10px 0 0; font-size: .72rem; color: var(--muted); display: flex; align-items: center; justify-content: center; gap: 5px; transition: opacity .3s; }
+.browse-tap-hint.hidden { opacity: 0; pointer-events: none; }
+
+.browse-dots { display: flex; gap: 5px; justify-content: center; padding: 14px 20px 0; flex-wrap: wrap; }
+.browse-dot { width: 7px; height: 7px; border-radius: 99px; background: var(--border); transition: all .3s; }
+.browse-dot.current { background: var(--teal); width: 20px; }
+.browse-dot.seen { background: var(--muted); }
+
+/* ══════ REVISÃO ESPAÇADA ══════ */
+.review-badge {
+  position: absolute;
+  top: -5px; right: -5px;
+  width: 14px; height: 14px;
+  border-radius: 50%;
+  background: var(--rose);
+  border: 2px solid var(--surface);
+  box-shadow: 0 0 6px rgba(255,107,138,.6);
+  animation: pulseBadge 2s ease-in-out infinite;
+  z-index: 2;
+}
+@keyframes pulseBadge {
+  0%, 100% { transform: scale(1); box-shadow: 0 0 6px rgba(255,107,138,.6); }
+  50%       { transform: scale(1.2); box-shadow: 0 0 10px rgba(255,107,138,.9); }
+}
+.folder-icon { position: relative; }
+
+.review-status-dot {
+  width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0;
+}
+.review-status-dot.green { background: var(--green); box-shadow: 0 0 5px rgba(62,207,142,.5); }
+.review-status-dot.red   { background: var(--rose);  box-shadow: 0 0 5px rgba(255,107,138,.5); animation: pulseBadge 2s ease-in-out infinite; }
+
+.duration-select-row {
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px;
+}
+.dur-btn {
+  padding: 11px 0; border-radius: 12px;
+  border: 1.5px solid var(--border);
+  background: var(--surface2); color: var(--muted);
+  font-family: 'Outfit', sans-serif; font-size: .85rem; font-weight: 600;
+  cursor: pointer; transition: all .18s; text-align: center;
+}
+.dur-btn.selected {
+  border-color: var(--gold); background: rgba(232,184,75,.1); color: var(--gold);
+}
+.dur-btn:active { transform: scale(.96); }
+
+@keyframes slideIn  { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+
+/* ══════ EDITOR MANUAL ══════ */
+.manual-editor-backdrop {
+  position: fixed; inset: 0; background: rgba(0,0,0,.7);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 900; opacity: 0; pointer-events: none; transition: opacity .25s;
+  padding: 16px;
+}
+.manual-editor-backdrop.open { opacity: 1; pointer-events: all; }
+.manual-editor-sheet {
+  background: var(--surface); border-radius: 24px;
+  width: 100%; max-width: 760px;
+  padding: 20px; display: flex; flex-direction: column; gap: 14px;
+  animation: slideIn .3s ease;
+}
+.manual-editor-header {
+  display: flex; align-items: center; justify-content: space-between;
+}
+.manual-editor-title { font-size: 1rem; font-weight: 700; color: var(--text); }
+.manual-editor-counter { font-size: .8rem; color: var(--muted); }
+.manual-editor-body {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 12px;
+}
+.manual-editor-side {
+  display: flex; flex-direction: column; gap: 8px;
+}
+.manual-editor-label {
+  font-size: .72rem; font-weight: 700; letter-spacing: .06em;
+  text-transform: uppercase; color: var(--muted);
+}
+.manual-editor-textarea {
+  width: 100%; min-height: 180px; resize: none;
+  background: var(--bg); border: 1.5px solid var(--border);
+  border-radius: 16px; padding: 14px 16px;
+  color: var(--text); font-family: 'Outfit', sans-serif;
+  font-size: .9rem; line-height: 1.65; outline: none;
+  transition: border-color .2s;
+  /* Garante que o campo é interativo no primeiro toque */
+  -webkit-user-select: text; user-select: text;
+  touch-action: manipulation;
+}
+.manual-editor-textarea:focus { border-color: var(--gold); }
+.manual-editor-textarea::placeholder { color: var(--muted); }
+.manual-editor-actions {
+  display: flex; gap: 10px; justify-content: flex-end;
+}
+.manual-editor-actions .btn-cancel {
+  padding: 12px 20px; border-radius: 14px; border: 1.5px solid var(--border);
+  background: var(--surface2); color: var(--muted);
+  font-family: 'Outfit', sans-serif; font-size: .85rem; font-weight: 600; cursor: pointer;
+}
+.manual-editor-actions .btn-save {
+  padding: 12px 24px; border-radius: 14px; border: none;
+  background: linear-gradient(135deg, var(--gold), #c8941c);
+  color: #000; font-family: 'Outfit', sans-serif;
+  font-size: .85rem; font-weight: 700; cursor: pointer;
+}
+.manual-editor-actions .btn-save-next {
+  padding: 12px 24px; border-radius: 14px; border: none;
+  background: var(--surface2); border: 1.5px solid var(--gold);
+  color: var(--gold); font-family: 'Outfit', sans-serif;
+  font-size: .85rem; font-weight: 700; cursor: pointer;
+}
+
+/* Abas do modal de adição */
+.add-modal-tabs { display: flex; gap: 8px; margin-bottom: 14px; }
+.add-modal-tab {
+  flex: 1; padding: 10px 0; text-align: center; border-radius: 12px;
+  border: 1.5px solid var(--border); background: var(--surface2); color: var(--muted);
+  font-family: 'Outfit', sans-serif; font-size: .82rem; font-weight: 600;
+  cursor: pointer; transition: all .18s;
+}
+.add-modal-tab.active { border-color: var(--gold); background: rgba(232,184,75,.1); color: var(--gold); }
+
+/* Hold indicator nos cards */
+.card-item { position: relative; }
+.card-hold-hint {
+  position: absolute; top: 50%; right: 14px; transform: translateY(-50%);
+  font-size: .65rem; color: var(--muted); opacity: 0;
+  transition: opacity .2s; pointer-events: none;
+}
+.card-item:active .card-hold-hint { opacity: 1; }
+@keyframes slideUp  { from { transform: translateY(100%); } to { transform: translateY(0); } }
+@keyframes fadeIn   { from { opacity: 0; } to { opacity: 1; } }
+@keyframes popIn    { from { opacity: 0; transform: scale(.5); } to { opacity: 1; transform: scale(1); } }
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR DESKTOP -->
+<div id="dt-sidebar">
+  <div class="dt-logo">FlashMind <span style="-webkit-text-fill-color:var(--teal);font-size:.5em;">●</span></div>
+  <div class="dt-sub">Sua biblioteca de flashcards</div>
+  <nav class="dt-nav">
+    <button class="dt-nav-btn active" id="dt-btn-pastas" onclick="goTo('s-home'); switchTab('folders'); setDtNav('dt-btn-pastas')">
+      <span class="dt-icon">📂</span> Pastas
+    </button>
+    <button class="dt-nav-btn" id="dt-btn-grupos" onclick="goTo('s-home'); switchTab('groups'); setDtNav('dt-btn-grupos')">
+      <span class="dt-icon">🗂&#xFE0F;</span> Grupos
+    </button>
+  </nav>
+  <div class="dt-sidebar-footer">
+    <button class="btn-backup-home" style="justify-content:center;gap:8px;display:flex;align-items:center;" onclick="openBackupModal()">💾 Backup</button>
+    <button class="btn-backup-home" id="btn-zoom-dt" style="justify-content:center;gap:8px;display:flex;align-items:center;" onclick="cycleZoom()">𝐀 Tamanho</button>
+  </div>
+</div>
+
+<!-- CONTEÚDO PRINCIPAL -->
+<div id="dt-content">
+
+<!-- HOME -->
+<div id="s-home" class="screen active">
+  <div class="home-header">
+    <div class="logo-row">
+      <div class="logo-wrap"><span class="logo-main">FlashMind</span><div class="logo-dot"></div></div>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <button class="btn-backup-home" onclick="cycleZoom()" id="btn-zoom" title="Tamanho do texto">𝐀</button>
+        <button class="btn-backup-home" onclick="openBackupModal()" title="Exportar / Importar">💾</button>
+      </div>
+    </div>
+    <div class="home-sub">Sua biblioteca de flashcards</div>
+    <div class="tab-row">
+      <button class="tab-btn active" id="tab-folders" onclick="switchTab('folders')">📂 Pastas</button>
+      <button class="tab-btn"        id="tab-groups"  onclick="switchTab('groups')">🗂&#xFE0F; Grupos</button>
+    </div>
+  </div>
+  <div class="home-body">
+    <div id="tab-content-folders">
+      <div class="section-label">Pastas individuais</div>
+      <div id="folder-list">
+        <div class="empty" id="home-empty-folders">
+          <span class="empty-icon">📂</span>
+          <div class="empty-title">Nenhuma pasta ainda</div>
+          <div class="empty-sub">Toque em <strong>+</strong> para criar sua primeira pasta</div>
+        </div>
+      </div>
+    </div>
+    <div id="tab-content-groups" style="display:none;">
+      <div class="section-label">Grupos de pastas</div>
+      <div class="group-filter-row">
+        <div class="group-filter-chip type-group active" id="filter-chip-group" onclick="toggleGroupFilter('group')">🟡 Grupos</div>
+        <div class="group-filter-chip type-collection" id="filter-chip-collection" onclick="toggleGroupFilter('collection')">🗂️ Coleções</div>
+      </div>
+      <div id="group-list">
+        <div class="empty" id="home-empty-groups">
+          <span class="empty-icon">🗂&#xFE0F;</span>
+          <div class="empty-title">Nenhum grupo ainda</div>
+          <div class="empty-sub">Toque em <strong>+</strong> para criar um grupo e reunir pastas</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="fab-wrap">
+    <div id="fab-group-wrap" style="display:none; flex-direction:column; align-items:center; gap:2px;">
+      <button class="fab fab-group" onclick="goTo('s-create-group')">🗂&#xFE0F;</button>
+      <div class="fab-label lbl-group">Grupo</div>
+    </div>
+    <div style="display:flex; flex-direction:column; align-items:center; gap:2px;">
+      <button class="fab fab-folder" onclick="goTo('s-create')">📂</button>
+      <div class="fab-label lbl-folder">Pasta</div>
+    </div>
+  </div>
+</div>
+
+<!-- CREATE FOLDER -->
+<div id="s-create" class="screen">
+  <div class="screen-header">
+    <button class="btn-back" onclick="goTo('s-home')">←</button>
+    <div class="screen-title">Nova pasta</div>
+  </div>
+  <div class="form-body">
+    <div class="field">
+      <label class="field-label">Título da pasta</label>
+      <input id="folder-name-input" class="field-input" type="text" placeholder="Ex: Biologia – Células" maxlength="60">
+    </div>
+    <div class="field">
+      <label class="field-label">Ícone</label>
+      <div class="emoji-grid" id="emoji-grid"></div>
+    </div>
+    <div class="field">
+      <label class="field-label">Formato dos flashcards</label>
+      <div class="format-box">
+        <div class="format-box-header">
+          <div class="format-box-label">📋 Modelo para copiar</div>
+          <button class="btn-copy-fmt" onclick="copyFormat()">Copiar</button>
+        </div>
+        <div class="format-preview"><span class="num">1.</span>
+<span class="kw">PERGUNTA:</span> Escreva a pergunta aqui
+<span class="kw">RESPOSTA:</span> Escreva a resposta aqui
+
+<span class="num">2.</span>
+<span class="kw">PERGUNTA:</span> Outra pergunta aqui
+<span class="kw">RESPOSTA:</span> Outra resposta aqui</div>
+      </div>
+    </div>
+    <div class="field">
+      <label class="field-label">⏱ Revisão espaçada — duração do ciclo</label>
+      <div class="duration-select-row" id="dur-grid-create">
+        <div class="dur-btn" data-months="0" onclick="selectDuration('create',0)">Sem revisão</div>
+        <div class="dur-btn selected" data-months="1" onclick="selectDuration('create',1)">1 mês</div>
+        <div class="dur-btn" data-months="3" onclick="selectDuration('create',3)">3 meses</div>
+        <div class="dur-btn" data-months="6" onclick="selectDuration('create',6)">6 meses</div>
+      </div>
+    </div>
+    <div class="field">
+      <label class="field-label">Cole seus flashcards aqui</label>
+      <textarea id="create-cards-input" class="cards-textarea" placeholder="1.
+PERGUNTA: Qual é a capital do Brasil?
+RESPOSTA: Brasília
+
+2.
+PERGUNTA: Qual planeta é o Planeta Vermelho?
+RESPOSTA: Marte"></textarea>
+    </div>
+    <button class="btn-primary" onclick="createFolder()">Criar pasta →</button>
+  </div>
+</div>
+
+<!-- CREATE GROUP -->
+<div id="s-create-group" class="screen">
+  <div class="screen-header">
+    <button class="btn-back" onclick="goTo('s-home')">←</button>
+    <div class="screen-title">Novo grupo</div>
+  </div>
+  <div class="form-body">
+    <div class="field">
+      <label class="field-label">Nome do grupo</label>
+      <input id="group-name-input" class="field-input" type="text" placeholder="Ex: Coração – Anatomia" maxlength="60">
+    </div>
+    <div class="field">
+      <label class="field-label">Ícone do grupo</label>
+      <div class="emoji-grid" id="emoji-grid-group"></div>
+    </div>
+    <div class="field">
+      <label class="field-label">O que esse grupo vai reunir?</label>
+      <div class="grouptype-tab-row">
+        <div class="grouptype-tab type-group active" id="ct-tab-group" onclick="switchCreateGroupType('group')">🟡 Pastas</div>
+        <div class="grouptype-tab type-collection" id="ct-tab-collection" onclick="switchCreateGroupType('collection')">🗂️ Grupos (Coleção)</div>
+      </div>
+      <div class="folder-picker" id="folder-picker">
+        <div class="pick-empty">Nenhuma pasta disponível. Crie pastas primeiro.</div>
+      </div>
+      <div class="folder-picker" id="group-picker" style="display:none;">
+        <div class="pick-empty">Nenhum grupo disponível.</div>
+      </div>
+    </div>
+    <button class="btn-primary btn-primary-purple" onclick="createGroup()">Criar grupo →</button>
+  </div>
+</div>
+
+<!-- GROUP SCREEN -->
+<div id="s-group" class="screen">
+  <div class="group-header">
+    <div class="group-header-top">
+      <button class="btn-back" onclick="groupGoBack()">←</button>
+      <div class="group-header-icon" id="gh-icon"></div>
+      <div class="group-header-name" id="gh-name"></div>
+      <button class="btn-edit-group" id="btn-edit-group" onclick="openEditGroupModal()" title="Editar grupo">✏️</button>
+      <button class="btn-delete" id="btn-del-group" title="Segure para excluir">
+        <div class="del-ring" id="del-ring-group"></div>
+        <span class="del-icon">🗑️</span>
+      </button>
+    </div>
+    <div class="stats-row">
+      <div class="stat-chip">🗂&#xFE0F; <b id="gh-stat-folders">0</b> pastas</div>
+      <div class="stat-chip">📇 <b id="gh-stat-cards">0</b> cards</div>
+    </div>
+  </div>
+  <div class="group-folders-list" id="group-folders-list"></div>
+</div>
+
+<!-- EDIT GROUP MODAL -->
+<div class="modal-backdrop" id="edit-group-modal" onclick="editGroupBackdropClick(event)">
+  <div class="modal-sheet" style="padding:0 20px 40px;max-height:90vh;overflow-y:auto;">
+    <div class="modal-handle"></div>
+    <div style="font-family:'Playfair Display',serif;font-size:1.25rem;font-weight:700;margin-bottom:4px;">Editar grupo</div>
+    <div style="font-size:.8rem;color:var(--muted);margin-bottom:20px;line-height:1.5;">Renomeie, troque o ícone ou modifique as pastas do grupo</div>
+
+    <div class="field">
+      <label class="field-label">Nome do grupo</label>
+      <input id="edit-group-name" class="field-input" type="text" maxlength="60" placeholder="Nome do grupo">
+    </div>
+
+    <div class="field">
+      <label class="field-label">Ícone</label>
+      <div class="emoji-grid" id="emoji-grid-edit-group"></div>
+    </div>
+
+    <div class="field" id="edit-folder-field">
+      <label class="field-label" id="edit-picker-label">Pastas incluídas no grupo</label>
+      <div class="folder-picker" id="edit-folder-picker"></div>
+    </div>
+
+    <div style="display:flex;gap:10px;margin-top:8px;">
+      <button onclick="closeEditGroupModal()" style="flex:1;padding:14px;border-radius:14px;background:var(--surface2);border:1px solid var(--border);color:var(--muted);font-family:'Outfit',sans-serif;font-size:.9rem;font-weight:600;cursor:pointer;">Cancelar</button>
+      <button onclick="saveGroupEdits()" style="flex:2;padding:14px;border-radius:14px;background:linear-gradient(135deg,var(--purple),#7c3aed);border:none;color:#fff;font-family:'Outfit',sans-serif;font-size:.9rem;font-weight:700;cursor:pointer;">Salvar alterações</button>
+    </div>
+  </div>
+</div>
+
+<!-- FOLDER SCREEN -->
+<div id="s-folder" class="screen">
+  <div class="folder-header" style="position:relative;">
+    <div class="folder-header-top">
+      <button class="btn-back" id="folder-back-btn" onclick="folderGoBack()">←</button>
+      <div class="folder-header-icon" id="fh-icon"></div>
+      <div class="folder-header-name" id="fh-name"></div>
+    </div>
+      <!-- Painel de revisão espaçada -->
+      <div id="review-info-card" style="display:none; flex-direction:column; align-items:flex-end; gap:2px; position:absolute; top:32px; right:20px;">
+        <div style="display:flex; align-items:center; gap:5px;">
+          <div class="review-status-dot green" id="review-dot"></div>
+          <div class="rv-cycle" id="rv-cycle" style="font-size:.62rem; font-weight:700; letter-spacing:.06em; color:var(--muted); text-transform:uppercase;"></div>
+        </div>
+        <div id="rv-last" style="font-size:.7rem; color:var(--muted); text-align:right;"></div>
+        <div id="rv-next" style="font-size:.7rem; text-align:right;"></div>
+      </div>
+    <div class="stats-row">
+      <div class="stat-chip">📇 <b id="stat-total">0</b> cards</div>
+      <div class="stat-chip" id="group-chip" style="display:none;">🗂&#xFE0F; <span id="group-chip-name"></span></div>
+    </div>
+  </div>
+
+  <!-- Import button → opens modal -->
+  <div class="import-btn" onclick="openAddModal()">
+    <div class="import-btn-label"><span>✏️</span> Editar / Adicionar flashcards</div>
+    <span class="import-btn-arrow">›</span>
+  </div>
+
+  <div class="cards-list" id="cards-list">
+    <div class="empty" id="folder-empty" style="display:none;">
+      <span class="empty-icon">🃏</span>
+      <div class="empty-title">Pasta vazia</div>
+      <div class="empty-sub">Adicione flashcards usando o botão acima</div>
+    </div>
+  </div>
+  <button class="study-fab" id="study-fab" onclick="openModePicker()">▶ Estudar agora</button>
+</div>
+
+<!-- STUDY -->
+<div id="s-study" class="screen">
+  <div class="study-header">
+    <button class="btn-back" onclick="goTo('s-folder')">←</button>
+    <div class="study-progress-track"><div class="study-progress-fill" id="study-progress-fill"></div></div>
+    <div class="study-counter" id="study-counter">1 / 1</div>
+  </div>
+  <div class="flip-area">
+    <!-- outer wrapper drives height via ghost -->
+    <div class="flip-card-outer" onclick="flipCard()">
+      <!-- ghost: invisible, holds both texts to set container height -->
+      <div class="flip-ghost">
+        <div class="face-badge" style="opacity:0; font-size:.65rem;">X</div>
+        <div class="face-text" id="sizer-q"></div>
+        <div class="face-text" id="sizer-a"></div>
+      </div>
+      <!-- inner: rotates -->
+      <div class="flip-card" id="flip-card">
+        <div class="flip-face flip-front">
+          <div class="face-badge">🔍 Pergunta</div>
+          <div class="face-text" id="face-q"></div>
+        </div>
+        <div class="flip-face flip-back">
+          <div class="face-badge">💡 Resposta</div>
+          <div class="face-text" id="face-a"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="judge-row" id="judge-row">
+    <button class="btn-judge btn-wrong"   onclick="judge(false)">✗&nbsp; Errei</button>
+    <button class="btn-judge btn-correct" onclick="judge(true)">✓&nbsp; Acertei</button>
+  </div>
+  <div class="card-dots" id="card-dots"></div>
+  <!-- prev button — always visible, disabled on first card -->
+  <div class="prev-row">
+    <button class="btn-prev" id="btn-prev" onclick="prevCard()">← Card anterior</button>
+  </div>
+</div>
+
+<!-- RESULT -->
+<div class="done-overlay" id="done-overlay">
+  <div class="result-emoji" id="result-emoji">🎉</div>
+  <div class="result-title" id="result-title">Sessão concluída!</div>
+  <div class="result-sub"   id="result-sub"></div>
+  <div class="score-ring-wrap">
+    <svg width="150" height="150" viewBox="0 0 150 150">
+      <circle class="ring-bg"   cx="75" cy="75" r="60"/>
+      <circle class="ring-fill" id="ring-fill" cx="75" cy="75" r="60" stroke-dasharray="376.99" stroke-dashoffset="376.99"/>
+    </svg>
+    <div class="score-center">
+      <div class="score-pct" id="score-pct">0%</div>
+      <div class="score-label">de acerto</div>
+    </div>
+  </div>
+  <div class="score-chips">
+    <div class="score-chip chip-correct" onclick="openCardList('correct')" style="cursor:pointer;">
+      <div class="chip-num" id="chip-correct">0</div>
+      <div class="chip-lbl">✓ Acertos</div>
+      <div class="chip-tap">Ver lista ›</div>
+    </div>
+    <div class="score-chip chip-wrong" onclick="openCardList('wrong')" style="cursor:pointer;">
+      <div class="chip-num" id="chip-wrong">0</div>
+      <div class="chip-lbl">✗ Erros</div>
+      <div class="chip-tap">Ver lista ›</div>
+    </div>
+  </div>
+  <div class="result-msg" id="result-msg"></div>
+  <div class="done-btns">
+    <button class="btn-primary" onclick="restartStudy()">🔄 Repetir sessão</button>
+    <button class="btn-sm btn-sm-ghost" style="padding:14px;border-radius:16px;" onclick="document.getElementById('done-overlay').classList.remove('show'); goTo('s-folder')">← Voltar à pasta</button>
+  </div>
+</div>
+
+<!-- BROWSE MODE -->
+<div id="s-browse" class="screen">
+  <div class="browse-header">
+    <button class="btn-back" onclick="goTo('s-folder')">←</button>
+    <div class="study-progress-track"><div class="study-progress-fill" id="browse-progress-fill"></div></div>
+    <div class="study-counter" id="browse-counter">1 / 1</div>
+    <div class="browse-mode-badge">Estudar</div>
+  </div>
+  <div class="browse-flip-area">
+    <div class="flip-card-outer" onclick="browseFlip()">
+      <div class="flip-ghost">
+        <div class="face-badge" style="opacity:0; font-size:.65rem;">X</div>
+        <div class="face-text" id="b-sizer-q"></div>
+        <div class="face-text" id="b-sizer-a"></div>
+      </div>
+      <div class="flip-card" id="browse-flip-card">
+        <div class="flip-face flip-front">
+          <div class="face-badge">🔍 Pergunta</div>
+          <div class="face-text" id="b-face-q"></div>
+        </div>
+        <div class="flip-face flip-back">
+          <div class="face-badge">💡 Resposta</div>
+          <div class="face-text" id="b-face-a"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="browse-dots" id="browse-dots"></div>
+  <div class="browse-nav-row">
+    <button class="btn-browse-nav btn-browse-prev" id="btn-browse-prev" onclick="browseNav(-1)" disabled>
+      ←
+    </button>
+    <button class="btn-browse-nav btn-browse-next" id="btn-browse-next" onclick="browseNav(1)">
+      →
+    </button>
+  </div>
+</div>
+
+<!-- MODE PICKER MODAL -->
+<div class="mode-modal-backdrop" id="mode-modal" onclick="modeBackdropClick(event)">
+  <div class="mode-sheet">
+    <div class="mode-handle"></div>
+    <div class="mode-title">Como quer estudar?</div>
+    <div class="mode-subtitle">Escolha o modo de estudo para esta sessão</div>
+    <div class="mode-options">
+      <div class="mode-option mode-browse" onclick="startBrowse()">
+        <div class="mode-option-icon">📖</div>
+        <div class="mode-option-info">
+          <div class="mode-option-name">Modo Estudar</div>
+          <div class="mode-option-desc">Navegue pelos cards livremente com ← →. Vire para ver a resposta no seu ritmo, sem julgamento.</div>
+        </div>
+        <div class="mode-option-badge">Livre</div>
+      </div>
+      <div class="mode-option mode-test" onclick="startTest()">
+        <div class="mode-option-icon">🎯</div>
+        <div class="mode-option-info">
+          <div class="mode-option-name">Modo Teste</div>
+          <div class="mode-option-desc">Vire o card, avalie se acertou ou errou e receba uma pontuação ao final.</div>
+        </div>
+        <div class="mode-option-badge">Pontuação</div>
+      </div>
+    </div>
+    <button class="btn-mode-cancel" onclick="closeModeModal()">Cancelar</button>
+  </div>
+</div>
+
+
+<div class="modal-backdrop" id="add-modal" onclick="modalBackdropClick(event)">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-header">
+      <div class="modal-title">Adicionar flashcards</div>
+      <button class="modal-close" onclick="closeAddModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="add-modal-tabs">
+        <div class="add-modal-tab active" id="add-tab-paste" onclick="switchAddTab('paste')">📋 Colar texto</div>
+        <div class="add-modal-tab" id="add-tab-manual" onclick="switchAddTab('manual')">✏️ Criar manualmente</div>
+      </div>
+      <!-- ABA COLAR -->
+      <div id="add-panel-paste">
+        <div class="modal-format-box">
+        <div class="modal-format-row">
+          <div class="modal-format-label">📋 Formato</div>
+          <button class="btn-copy-fmt" onclick="copyFormat()">Copiar modelo</button>
+        </div>
+        <div class="format-preview" style="font-size:.72rem;"><span class="num">1.</span>
+<span class="kw">PERGUNTA:</span> Pergunta aqui
+<span class="kw">RESPOSTA:</span> Resposta aqui</div>
+      </div>
+      <textarea id="modal-textarea" class="modal-textarea" placeholder="Cole seus novos flashcards aqui...
+
+Os cards serão adicionados ao final da lista existente."></textarea>
+      <div class="modal-actions">
+        <button class="btn-modal-cancel" onclick="closeAddModal()">Cancelar</button>
+        <button class="btn-modal-add"    onclick="addCardsFromModal()">＋ Adicionar</button>
+      </div>
+      </div><!-- fim add-panel-paste -->
+      <!-- ABA MANUAL -->
+      <div id="add-panel-manual" style="display:none;">
+        <p style="font-size:.82rem;color:var(--muted);margin-bottom:14px;">Clique em "Criar card" para abrir o editor e digitar pergunta e resposta manualmente.</p>
+        <button class="btn-modal-add" style="width:100%;" onclick="closeAddModal(); openManualEditor(null)">✏️ Criar novo card</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- EDITOR MANUAL -->
+<div class="manual-editor-backdrop" id="manual-editor" onclick="manualEditorBackdropClick(event)">
+  <div class="manual-editor-sheet">
+    <div class="manual-editor-header">
+      <div class="manual-editor-title" id="manual-editor-title">Novo card</div>
+      <div class="manual-editor-counter" id="manual-editor-counter"></div>
+    </div>
+    <div class="manual-editor-body">
+      <div class="manual-editor-side">
+        <div class="manual-editor-label">🔍 Pergunta</div>
+        <textarea class="manual-editor-textarea" id="manual-pergunta" placeholder="Digite a pergunta aqui..." ontouchend="this.focus()"></textarea>
+      </div>
+      <div class="manual-editor-side">
+        <div class="manual-editor-label">💡 Resposta</div>
+        <textarea class="manual-editor-textarea" id="manual-resposta" placeholder="Digite a resposta aqui..." ontouchend="this.focus()"></textarea>
+      </div>
+    </div>
+    <div class="manual-editor-actions">
+      <button class="btn-cancel" onclick="closeManualEditor()">Cancelar</button>
+      <button class="btn-save-next" id="manual-btn-next" onclick="saveManualCardAndNext()" style="display:none;">Salvar e criar próximo ›</button>
+      <button class="btn-save" onclick="saveManualCard()">💾 Salvar</button>
+    </div>
+  </div>
+</div>
+<div class="backup-modal-backdrop" id="backup-modal" onclick="backupBackdropClick(event)">
+  <div class="backup-sheet">
+    <div class="backup-handle"></div>
+    <div class="backup-title">💾 Backup de dados</div>
+    <div class="backup-sub">Exporte como JSON para salvar ou transferir entre dispositivos.</div>
+
+    <!-- Abas -->
+    <div style="display:flex;gap:8px;margin-bottom:20px;">
+      <button class="tab-btn active" id="bk-tab-full" onclick="switchBackupTab('full')" style="font-size:.8rem;padding:8px 0;">🗄️ Completo</button>
+      <button class="tab-btn" id="bk-tab-individual" onclick="switchBackupTab('individual')" style="font-size:.8rem;padding:8px 0;">📌 Individual</button>
+    </div>
+
+    <!-- ABA COMPLETO -->
+    <div id="bk-panel-full">
+      <div class="backup-section">
+        <div class="backup-section-label">📊 Dados atuais</div>
+        <div class="backup-info-box">
+          <div class="backup-info-row">
+            <span class="backup-info-key">📂 Pastas</span>
+            <span class="backup-info-val" id="bk-folders">0</span>
+          </div>
+          <div class="backup-info-row">
+            <span class="backup-info-key">🗂&#xFE0F; Grupos</span>
+            <span class="backup-info-val" id="bk-groups">0</span>
+          </div>
+          <div class="backup-info-row">
+            <span class="backup-info-key">📇 Total de cards</span>
+            <span class="backup-info-val" id="bk-cards">0</span>
+          </div>
+          <div class="backup-info-row">
+            <span class="backup-info-key">🕐 Último backup</span>
+            <span class="backup-info-val" id="bk-date">Nunca</span>
+          </div>
+        </div>
+      </div>
+      <div class="backup-section">
+        <div class="backup-section-label">📤 Exportar tudo</div>
+        <button class="btn-backup-action btn-backup-export" onclick="exportJSON()">
+          ⬇️ Baixar backup completo (.json)
+        </button>
+      </div>
+      <div class="backup-section">
+        <div class="backup-section-label">📥 Importar</div>
+        <button class="btn-backup-action btn-backup-import" onclick="document.getElementById('import-file-input').click()">
+          ⬆️ Carregar arquivo (.json)
+        </button>
+        <div class="backup-warn">⚠️ A importação completa <strong>substitui</strong> todos os dados atuais. Exporte primeiro para não perder nada.</div>
+        <input type="file" id="import-file-input" accept=".json,application/json" style="display:none" onchange="importJSON(event)">
+      </div>
+    </div>
+
+    <!-- ABA INDIVIDUAL -->
+    <div id="bk-panel-individual" style="display:none;">
+      <div class="backup-section">
+        <div class="backup-section-label">📂 Exportar pasta</div>
+        <div id="bk-folder-list" style="display:flex;flex-direction:column;gap:8px;margin-bottom:4px;"></div>
+        <div id="bk-folder-empty" class="pick-empty" style="display:none;">Nenhuma pasta criada ainda.</div>
+      </div>
+      <div class="backup-section">
+        <div class="backup-section-label">🗂&#xFE0F; Exportar grupo</div>
+        <div id="bk-group-list" style="display:flex;flex-direction:column;gap:8px;margin-bottom:4px;"></div>
+        <div id="bk-group-empty" class="pick-empty" style="display:none;">Nenhum grupo criado ainda.</div>
+      </div>
+      <div class="backup-section">
+        <div class="backup-section-label">📥 Importar individual</div>
+        <button class="btn-backup-action btn-backup-import" onclick="document.getElementById('import-individual-input').click()">
+          ⬆️ Carregar pasta ou grupo (.json)
+        </button>
+        <div class="backup-warn">✅ A importação individual <strong>adiciona</strong> aos dados existentes, sem apagar nada.</div>
+        <input type="file" id="import-individual-input" accept=".json,application/json" style="display:none" onchange="importIndividualJSON(event)">
+      </div>
+    </div>
+
+    <button class="btn-backup-cancel" onclick="closeBackupModal()">Fechar</button>
+  </div>
+</div>
+
+<!-- CARD LIST MODAL -->
+<div class="cardlist-backdrop" id="cardlist-modal" onclick="cardlistBackdropClick(event)">
+  <div class="cardlist-sheet">
+    <div class="cardlist-handle"></div>
+    <div class="cardlist-header">
+      <div class="cardlist-title" id="cardlist-title">Lista</div>
+      <button class="cardlist-close" onclick="closeCardList()">✕</button>
+    </div>
+    <div class="cardlist-body" id="cardlist-body"></div>
+    <div class="cardlist-footer" id="cardlist-footer"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ═══ STATE ═══ */
+const EMOJIS = ['📚','🧠','🔬','🧮','🌍','⚗️','📝','🎯','💡','🏛️','🌱','⚡','🎨','🔭','🧬','💻','🎵','📐','❤️','🫀','🦷','🦴','🩺','🔑','🌊','🏔️','🦋','🧩'];
+
+let folders = [];
+let groups  = [];
+
+let activeFolderIdx = null;
+let activeGroupIdx  = null;
+let groupStack = [];
+
+function groupGoBack() {
+  if (groupStack.length) {
+    activeGroupIdx = groupStack.pop();
+    renderGroupScreen();
+  } else {
+    goTo('s-home');
+  }
+}
+let folderOrigin    = 'home';
+
+let studyCards = [];
+let sIdx = 0;
+let results = {};
+let flipped = false;
+
+let selectedEmoji      = EMOJIS[0];
+let selectedEmojiGroup = EMOJIS[18];
+
+/* ═══ INDEXEDDB — armazenamento persistente ═══ */
+const DB_NAME    = 'flashmind_db';
+const DB_VERSION = 1;
+const STORE_NAME = 'keyval';
+let _db = null;
+
+function openDB() {
+  return new Promise((resolve, reject) => {
+    if (_db) { resolve(_db); return; }
+    const req = indexedDB.open(DB_NAME, DB_VERSION);
+    req.onupgradeneeded = e => {
+      e.target.result.createObjectStore(STORE_NAME);
+    };
+    req.onsuccess = e => { _db = e.target.result; resolve(_db); };
+    req.onerror   = e => reject(e.target.error);
+  });
+}
+
+function dbGet(key) {
+  return openDB().then(db => new Promise((resolve, reject) => {
+    const tx  = db.transaction(STORE_NAME, 'readonly');
+    const req = tx.objectStore(STORE_NAME).get(key);
+    req.onsuccess = () => resolve(req.result);
+    req.onerror   = e => reject(e.target.error);
+  }));
+}
+
+function dbSet(key, value) {
+  return openDB().then(db => new Promise((resolve, reject) => {
+    const tx  = db.transaction(STORE_NAME, 'readwrite');
+    const req = tx.objectStore(STORE_NAME).put(value, key);
+    req.onsuccess = () => resolve();
+    req.onerror   = e => reject(e.target.error);
+  }));
+}
+
+/* ═══ PERSIST ═══ */
+function save() {
+  dbSet('fm_folders', folders).catch(console.error);
+  dbSet('fm_groups',  groups ).catch(console.error);
+}
+
+/* ═══ INIT DB — carrega dados e inicia o app ═══ */
+async function initApp() {
+  try {
+    const savedFolders = await dbGet('fm_folders');
+    const savedGroups  = await dbGet('fm_groups');
+
+    // Migração: se ainda há dados no localStorage, move para IndexedDB
+    if (!savedFolders) {
+      const lsFolders = localStorage.getItem('fm_folders');
+      if (lsFolders) {
+        folders = JSON.parse(lsFolders);
+        localStorage.removeItem('fm_folders');
+      }
+    } else {
+      folders = savedFolders;
+    }
+    if (!savedGroups) {
+      const lsGroups = localStorage.getItem('fm_groups');
+      if (lsGroups) {
+        groups = JSON.parse(lsGroups);
+        localStorage.removeItem('fm_groups');
+      }
+    } else {
+      groups = savedGroups;
+    }
+  } catch(e) {
+    // Fallback para localStorage se IndexedDB falhar
+    folders = JSON.parse(localStorage.getItem('fm_folders') || '[]');
+    groups  = JSON.parse(localStorage.getItem('fm_groups')  || '[]');
+  }
+  renderHome();
+  applyZoom();
+}
+
+/* ═══ NAVIGATION ═══ */
+function goTo(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  window.scrollTo(0,0);
+  // Sincroniza sidebar desktop
+  if (id === 's-home') setDtNav('dt-btn-pastas');
+  if (id === 's-home')   renderHome();
+  if (id === 's-group')  renderGroupScreen();
+  if (id === 's-folder') renderFolderScreen();
+  if (id === 's-create-group') { switchCreateGroupType('group'); renderFolderPicker(); }
+}
+
+function switchTab(tab) {
+  document.getElementById('tab-content-folders').style.display = tab === 'folders' ? 'block' : 'none';
+  document.getElementById('tab-content-groups').style.display  = tab === 'groups'  ? 'block' : 'none';
+  document.getElementById('tab-folders').classList.toggle('active', tab === 'folders');
+  document.getElementById('tab-groups').classList.toggle('active',  tab === 'groups');
+  document.getElementById('fab-group-wrap').style.display = tab === 'groups' ? 'flex' : 'none';
+}
+
+/* ═══ EMOJI GRIDS ═══ */
+function buildEmojiGrid(containerId, getSelected, setSelected) {
+  const grid = document.getElementById(containerId);
+  if (!grid) return;
+  grid.innerHTML = '';
+  EMOJIS.forEach(e => {
+    const btn = document.createElement('div');
+    btn.className = 'emoji-opt' + (e === getSelected() ? ' selected' : '');
+    btn.textContent = e;
+    btn.onclick = () => {
+      setSelected(e);
+      grid.querySelectorAll('.emoji-opt').forEach(b => b.classList.remove('selected'));
+      btn.classList.add('selected');
+    };
+    grid.appendChild(btn);
+  });
+}
+
+/* ═══ HOME ═══ */
+function renderHome() { renderFolderList(); renderGroupList(); }
+
+function renderFolderList() {
+  const list  = document.getElementById('folder-list');
+  const empty = document.getElementById('home-empty-folders');
+  list.innerHTML = '';
+  const free = folders.map((f,i) => ({f,i})).filter(({i}) => !groups.some(g => g.folderIds.includes(i)));
+  if (!free.length) { list.appendChild(empty); return; }
+  free.forEach(({f, i}, ai) => {
+    const card = document.createElement('div');
+    card.className = 'folder-card';
+    card.style.animationDelay = (ai * .05) + 's';
+    const due = reviewIsDue(f);
+    if (due) {
+      card.style.borderColor = 'rgba(255,107,138,0.55)';
+      card.style.background  = 'rgba(255,107,138,0.06)';
+    }
+    card.innerHTML = `
+      <div class="folder-icon">${f.icon}</div>
+      <div class="folder-info">
+        <div class="folder-title">${esc(f.name)}</div>
+        <div class="folder-meta">${f.cards.length} card${f.cards.length !== 1 ? 's' : ''}</div>
+      </div>
+      <div class="folder-actions">
+        <button class="btn-delete" data-idx="${i}" title="Segure 5s para excluir">
+          <div class="del-ring"></div><span class="del-icon">🗑️</span>
+        </button>
+      </div>
+      <div class="folder-arrow">›</div>`;
+    card.addEventListener('click', e => {
+      if (e.target.closest('.btn-delete')) return;
+      activeFolderIdx = i; folderOrigin = 'home'; goTo('s-folder');
+    });
+    const delBtn = card.querySelector('.btn-delete');
+    attachHoldDelete(delBtn, () => deleteFolder(i));
+    list.appendChild(card);
+  });
+}
+
+/* ═══ FILTRO GRUPOS / COLEÇÕES ═══ */
+let groupFilter = { group: true, collection: false };
+
+function toggleGroupFilter(type) {
+  groupFilter = { group: type === 'group', collection: type === 'collection' };
+  document.getElementById('filter-chip-group').classList.toggle('active', groupFilter.group);
+  document.getElementById('filter-chip-collection').classList.toggle('active', groupFilter.collection);
+  renderGroupList();
+}
+
+function isCollection(g) { return !!(g.groupIds && g.groupIds.length); }
+
+function renderGroupList() {
+  const list  = document.getElementById('group-list');
+  const empty = document.getElementById('home-empty-groups');
+  list.innerHTML = '';
+  if (!groups.length) { list.appendChild(empty); return; }
+  const visible = groups
+    .map((g, gi) => ({ g, gi }))
+    .filter(({ g }) => isCollection(g) ? groupFilter.collection : groupFilter.group);
+  if (!visible.length) {
+    list.innerHTML = '<div class="empty" style="padding:40px 20px;"><span class="empty-icon">🔍</span><div class="empty-title">Nada para mostrar</div><div class="empty-sub">Ajuste os filtros acima</div></div>';
+    return;
+  }
+  visible.forEach(({ g, gi }, ai) => {
+    const collection = isCollection(g);
+    const totalCards = g.folderIds.reduce((acc, fi) => acc + (folders[fi] ? folders[fi].cards.length : 0), 0);
+    const card = document.createElement('div');
+    card.className = 'group-card' + (collection ? ' collection' : '');
+    card.style.animationDelay = (ai * .05) + 's';
+    const metaText = collection
+      ? `${g.groupIds.length} grupo${g.groupIds.length!==1?'s':''}`
+      : `${g.folderIds.length} pasta${g.folderIds.length!==1?'s':''} · ${totalCards} cards`;
+    card.innerHTML = `
+      ${collection ? '<div class="collection-badge">🗂️</div>' : ''}
+      <div class="group-icon-wrap">${g.icon}</div>
+      <div class="group-info">
+        <div class="group-title">${esc(g.name)}</div>
+        ${collection ? '<div class="collection-tag">Coleção</div>' : ''}
+        <div class="group-meta">${metaText}</div>
+      </div>
+      <div class="group-arrow">›</div>`;
+    card.addEventListener('click', () => { groupStack = []; activeGroupIdx = gi; goTo('s-group'); });
+    list.appendChild(card);
+  });
+}
+
+/* ═══ HOLD-TO-DELETE ═══ */
+const HOLD_MS = 5000;
+
+function attachHoldDelete(btn, onDelete) {
+  let timer = null;
+  let startTime = null;
+  let raf = null;
+
+  function tick() {
+    const elapsed = Date.now() - startTime;
+    const pct = Math.min(elapsed / HOLD_MS * 100, 100);
+    const ring = btn.querySelector('.del-ring');
+    if (ring) ring.style.background = `conic-gradient(var(--rose) ${pct}%, transparent ${pct}%)`;
+    if (pct < 100) raf = requestAnimationFrame(tick);
+  }
+
+  function start(e) {
+    e.stopPropagation();
+    startTime = Date.now();
+    btn.classList.add('holding');
+    raf = requestAnimationFrame(tick);
+    timer = setTimeout(() => {
+      cancelAnimationFrame(raf);
+      btn.classList.remove('holding');
+      onDelete();
+    }, HOLD_MS);
+  }
+
+  function cancel() {
+    clearTimeout(timer);
+    cancelAnimationFrame(raf);
+    btn.classList.remove('holding');
+    const ring = btn.querySelector('.del-ring');
+    if (ring) ring.style.background = '';
+  }
+
+  btn.addEventListener('mousedown',  start);
+  btn.addEventListener('touchstart', start, {passive:true});
+  btn.addEventListener('mouseup',    cancel);
+  btn.addEventListener('mouseleave', cancel);
+  btn.addEventListener('touchend',   cancel);
+  btn.addEventListener('touchcancel',cancel);
+}
+
+/* ═══ FOLDER CRUD ═══ */
+buildEmojiGrid('emoji-grid', () => selectedEmoji, v => selectedEmoji = v);
+
+function createFolder() {
+  const name = document.getElementById('folder-name-input').value.trim();
+  if (!name) { toast('Digite um título para a pasta'); return; }
+  const raw = document.getElementById('create-cards-input').value.trim();
+  let cards = [];
+  if (raw) {
+    cards = parseCards(raw);
+    if (!cards.length) { toast('Texto colado inválido. Verifique o formato.'); return; }
+    if (cards.length > 100) cards = cards.slice(0, 100);
+  }
+  const review = selectedDurationCreate > 0
+    ? { durationMonths: selectedDurationCreate, startedAt: new Date().toISOString(), lastReviewedAt: null, step: 0 }
+    : null;
+  folders.push({ name, icon: selectedEmoji, cards, review });
+  save();
+  document.getElementById('folder-name-input').value = '';
+  document.getElementById('create-cards-input').value = '';
+  selectedEmoji = EMOJIS[0];
+  selectedDurationCreate = 1;
+  selectDuration('create', 1);
+  buildEmojiGrid('emoji-grid', () => selectedEmoji, v => selectedEmoji = v);
+  toast(cards.length ? `✅ Pasta criada com ${cards.length} card(s)!` : '✅ Pasta criada!');
+  activeFolderIdx = folders.length - 1; folderOrigin = 'home';
+  goTo('s-folder');
+}
+
+function deleteFolder(i) {
+  if (activeFolderIdx === i) activeFolderIdx = null;
+  else if (activeFolderIdx !== null && activeFolderIdx > i) activeFolderIdx--;
+  // Atualiza folderIds dos grupos e remove grupos NORMAIS que ficarem vazios
+  // (coleções são ignoradas aqui, pois sempre têm folderIds = [])
+  const removedGroupIdxs = [];
+  groups.forEach((g, gi) => {
+    if (isCollection(g)) return; // coleções não têm folderIds — pula
+    g.folderIds = g.folderIds.filter(id => id !== i).map(id => id > i ? id - 1 : id);
+    if (g.folderIds.length === 0) removedGroupIdxs.push(gi);
+  });
+  if (removedGroupIdxs.length) {
+    groups = groups.filter((_, gi) => !removedGroupIdxs.includes(gi));
+    // Atualiza groupIds das coleções: remove referências e reindexa
+    groups.forEach(g => {
+      if (g.groupIds && g.groupIds.length) {
+        g.groupIds = g.groupIds
+          .filter(gi => !removedGroupIdxs.includes(gi))
+          .map(gi => gi - removedGroupIdxs.filter(r => r < gi).length);
+      }
+    });
+    groupStack = [];
+    // Se o grupo ativo foi removido, reseta activeGroupIdx
+    if (activeGroupIdx !== null) {
+      if (removedGroupIdxs.includes(activeGroupIdx)) activeGroupIdx = null;
+      else activeGroupIdx = activeGroupIdx - removedGroupIdxs.filter(gi => gi < activeGroupIdx).length;
+    }
+  }
+  folders.splice(i, 1);
+  save(); renderHome(); toast('🗑️ Pasta excluída');
+}
+
+function copyFormat() {
+  // Cria modal de número de cards se não existir
+  if (!document.getElementById('promptNumModal')) {
+    const overlay = document.createElement('div');
+    overlay.id = 'promptNumModal';
+    overlay.style.cssText = `
+      position:fixed;inset:0;z-index:9999;
+      background:rgba(0,0,0,.75);backdrop-filter:blur(6px);
+      display:flex;align-items:center;justify-content:center;
+      padding:24px;animation:fadeIn .2s ease;
+    `;
+    overlay.innerHTML = `
+      <div style="
+        background:var(--surface);border:1px solid var(--border);
+        border-radius:24px;padding:28px 24px;width:100%;max-width:360px;
+        animation:slideUp .25s cubic-bezier(.4,0,.2,1);
+      ">
+        <div style="font-family:'Playfair Display',serif;font-size:1.2rem;font-weight:700;margin-bottom:6px;">
+          Quantos flashcards?
+        </div>
+        <div style="font-size:.82rem;color:var(--muted);margin-bottom:20px;line-height:1.5;">
+          O prompt será ajustado com o número escolhido.
+        </div>
+
+        <!-- Botões rápidos -->
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:16px;" id="numQuickBtns">
+          ${[5,10,15,20].map(n => `
+            <button onclick="selectNumCards(${n})" style="
+              padding:12px 0;border-radius:12px;border:1.5px solid var(--border);
+              background:var(--surface2);color:var(--text);
+              font-family:'Outfit',sans-serif;font-size:.95rem;font-weight:600;
+              cursor:pointer;transition:all .18s;
+            " class="num-quick-btn" data-val="${n}">${n}</button>
+          `).join('')}
+        </div>
+
+        <!-- Input personalizado -->
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:20px;">
+          <input id="numCardsInput" type="number" min="1" max="100" placeholder="Outro número..."
+            style="
+              flex:1;background:var(--surface);border:1px solid var(--border);
+              border-radius:12px;padding:12px 14px;color:var(--text);
+              font-family:'Outfit',sans-serif;font-size:.95rem;outline:none;
+              transition:border-color .2s;
+            "
+            oninput="syncNumInput(this.value)"
+            onfocus="this.style.borderColor='var(--gold)'"
+            onblur="this.style.borderColor='var(--border)'"
+          />
+        </div>
+
+        <div style="display:flex;gap:10px;">
+          <button onclick="closePromptNumModal()" style="
+            flex:1;padding:14px;border-radius:14px;
+            background:var(--surface2);border:1px solid var(--border);
+            color:var(--muted);font-family:'Outfit',sans-serif;
+            font-size:.9rem;font-weight:600;cursor:pointer;
+          ">Cancelar</button>
+          <button onclick="confirmCopyPrompt()" style="
+            flex:2;padding:14px;border-radius:14px;
+            background:linear-gradient(135deg,var(--gold),#d4a030);
+            border:none;color:#0a0a0f;
+            font-family:'Outfit',sans-serif;font-size:.9rem;font-weight:700;cursor:pointer;
+          ">📋 Copiar prompt</button>
+        </div>
+      </div>
+    `;
+    overlay.addEventListener('click', e => { if (e.target === overlay) closePromptNumModal(); });
+    document.body.appendChild(overlay);
+  }
+
+  window._selectedNumCards = 10;
+  syncNumInput(10);
+  document.getElementById('numCardsInput').value = '';
+  document.getElementById('promptNumModal').style.display = 'flex';
+}
+
+function selectNumCards(n) {
+  window._selectedNumCards = n;
+  document.getElementById('numCardsInput').value = '';
+  document.querySelectorAll('.num-quick-btn').forEach(b => {
+    const active = parseInt(b.dataset.val) === n;
+    b.style.background    = active ? 'rgba(232,184,75,.15)' : 'var(--surface2)';
+    b.style.borderColor   = active ? 'var(--gold)'          : 'var(--border)';
+    b.style.color         = active ? 'var(--gold)'          : 'var(--text)';
+  });
+}
+
+function syncNumInput(val) {
+  const n = parseInt(val);
+  if (!isNaN(n) && n > 0) {
+    window._selectedNumCards = n;
+    document.querySelectorAll('.num-quick-btn').forEach(b => {
+      b.style.background  = 'var(--surface2)';
+      b.style.borderColor = 'var(--border)';
+      b.style.color       = 'var(--text)';
+    });
+  }
+}
+
+function closePromptNumModal() {
+  const m = document.getElementById('promptNumModal');
+  if (m) m.style.display = 'none';
+}
+
+function confirmCopyPrompt() {
+  const n = window._selectedNumCards || 10;
+  const formatExample = `1.\nPERGUNTA: Pergunta aqui?\nRESPOSTA: Resposta completa aqui.\n\n2.\nPERGUNTA: Outra pergunta aqui?\nRESPOSTA: Outra resposta completa aqui.\n\n... (continue até o ${n}º flashcard)`;
+  const prompt = `Você é especialista em criar material de estudo. Crie exatamente ${n} flashcards rigorosamente no formato abaixo. Não repita cards anteriores.
+
+REGRAS:
+- PERGUNTA clara e objetiva. RESPOSTA completa mas concisa.
+- Varie o estilo (definição, exemplo, comparação, consequência).
+- Respostas suficientes para compreensão sem outra fonte.
+
+FORMATO:
+${formatExample}
+
+TEMA: [substitua pelo tema]`;
+
+  navigator.clipboard.writeText(prompt)
+    .then(() => { toast(`✅ Prompt com ${n} flashcards copiado!`); closePromptNumModal(); })
+    .catch(() => { toast('Erro ao copiar. Tente novamente.'); });
+}
+
+/* ═══ GROUP CRUD ═══ */
+buildEmojiGrid('emoji-grid-group', () => selectedEmojiGroup, v => selectedEmojiGroup = v);
+
+let createGroupType = 'group'; // 'group' = reúne pastas | 'collection' = reúne outros grupos
+
+function switchCreateGroupType(type) {
+  createGroupType = type;
+  document.getElementById('ct-tab-group').classList.toggle('active', type === 'group');
+  document.getElementById('ct-tab-collection').classList.toggle('active', type === 'collection');
+  document.getElementById('folder-picker').style.display = type === 'group' ? 'flex' : 'none';
+  document.getElementById('group-picker').style.display  = type === 'collection' ? 'flex' : 'none';
+  if (type === 'collection') renderGroupPicker();
+}
+
+function renderGroupPicker() {
+  const picker = document.getElementById('group-picker');
+  picker.innerHTML = '';
+  // Só grupos que NÃO são coleções podem entrar numa coleção (evita ciclos)
+  const available = groups.map((g, gi) => ({ g, gi })).filter(({ g }) => !isCollection(g));
+  if (!available.length) {
+    picker.innerHTML = '<div class="pick-empty">Nenhum grupo disponível.<br>Crie grupos normais primeiro.</div>';
+    return;
+  }
+  available.forEach(({ g, gi }) => {
+    const totalCards = g.folderIds.reduce((acc, fi) => acc + (folders[fi] ? folders[fi].cards.length : 0), 0);
+    const item = document.createElement('div');
+    item.className = 'pick-item';
+    item.dataset.idx = gi;
+    item.innerHTML = `
+      <div class="pick-check">✓</div>
+      <div class="pick-icon">${g.icon}</div>
+      <div class="pick-info">
+        <div class="pick-name">${esc(g.name)}</div>
+        <div class="pick-sub">${g.folderIds.length} pasta${g.folderIds.length!==1?'s':''} · ${totalCards} cards</div>
+      </div>`;
+    item.onclick = () => item.classList.toggle('selected');
+    picker.appendChild(item);
+  });
+}
+
+function renderFolderPicker() {
+  buildEmojiGrid('emoji-grid-group', () => selectedEmojiGroup, v => selectedEmojiGroup = v);
+  const picker = document.getElementById('folder-picker');
+  picker.innerHTML = '';
+  const free = folders.map((f,i) => ({f,i})).filter(({i}) => !groups.some(g => g.folderIds.includes(i)));
+  if (!free.length) {
+    picker.innerHTML = '<div class="pick-empty">Nenhuma pasta disponível sem grupo.<br>Crie novas pastas primeiro.</div>';
+    return;
+  }
+  free.forEach(({f, i}) => {
+    const item = document.createElement('div');
+    item.className = 'pick-item';
+    item.dataset.idx = i;
+    item.innerHTML = `
+      <div class="pick-check">✓</div>
+      <div class="pick-icon">${f.icon}</div>
+      <div class="pick-info">
+        <div class="pick-name">${esc(f.name)}</div>
+        <div class="pick-sub">${f.cards.length} card${f.cards.length!==1?'s':''}</div>
+      </div>`;
+    item.onclick = () => item.classList.toggle('selected');
+    picker.appendChild(item);
+  });
+}
+
+function createGroup() {
+  const name = document.getElementById('group-name-input').value.trim();
+  if (!name) { toast('Digite um nome para o grupo'); return; }
+
+  if (createGroupType === 'collection') {
+    const selectedGroups = [...document.querySelectorAll('#group-picker .pick-item.selected')].map(el => parseInt(el.dataset.idx));
+    if (!selectedGroups.length) { toast('Selecione pelo menos um grupo'); return; }
+    groups.push({ name, icon: selectedEmojiGroup, folderIds: [], groupIds: selectedGroups });
+    toast(`✅ Coleção "${name}" criada!`);
+  } else {
+    const selected = [...document.querySelectorAll('#folder-picker .pick-item.selected')].map(el => parseInt(el.dataset.idx));
+    if (!selected.length) { toast('Selecione pelo menos uma pasta'); return; }
+    groups.push({ name, icon: selectedEmojiGroup, folderIds: selected, groupIds: [] });
+    toast(`✅ Grupo "${name}" criado!`);
+  }
+
+  save();
+  document.getElementById('group-name-input').value = '';
+  document.querySelectorAll('#folder-picker .pick-item, #group-picker .pick-item').forEach(el => el.classList.remove('selected'));
+  activeGroupIdx = groups.length - 1;
+  goTo('s-group');
+}
+
+function deleteCurrentGroup() {
+  const idx = activeGroupIdx;
+  groups.splice(idx, 1);
+  // Atualiza referências de groupIds em coleções (remove e reindexa)
+  groups.forEach(g => {
+    if (g.groupIds && g.groupIds.length) {
+      g.groupIds = g.groupIds.filter(gi => gi !== idx).map(gi => gi > idx ? gi - 1 : gi);
+    }
+  });
+  groupStack = [];
+  save();
+  toast('🗑️ Grupo excluído. Pastas mantidas.');
+  goTo('s-home');
+}
+
+/* ═══ EDIT GROUP MODAL ═══ */
+let editGroupEmojiSelected = null;
+
+function openEditGroupModal() {
+  const g = groups[activeGroupIdx];
+  document.getElementById('edit-group-name').value = g.name;
+  editGroupEmojiSelected = g.icon;
+
+  // Build emoji grid
+  buildEmojiGrid('emoji-grid-edit-group', () => editGroupEmojiSelected, v => editGroupEmojiSelected = v);
+
+  const picker = document.getElementById('edit-folder-picker');
+  picker.innerHTML = '';
+
+  if (isCollection(g)) {
+    // ── Editar coleção: mostra picker de grupos ──
+    document.getElementById('edit-picker-label').textContent = 'Grupos incluídos na coleção';
+    const currentGroupIds = new Set(g.groupIds);
+    const available = groups.map((grp, gi) => ({ grp, gi })).filter(({ grp, gi }) => {
+      if (gi === activeGroupIdx) return false; // não pode incluir a si mesma
+      if (isCollection(grp)) return false; // não permite coleção dentro de coleção
+      return true;
+    });
+    if (!available.length) {
+      picker.innerHTML = '<div class="pick-empty">Nenhum grupo disponível.</div>';
+    } else {
+      available.forEach(({ grp, gi }) => {
+        const totalCards = grp.folderIds.reduce((acc, fi) => acc + (folders[fi] ? folders[fi].cards.length : 0), 0);
+        const item = document.createElement('div');
+        item.className = 'pick-item' + (currentGroupIds.has(gi) ? ' selected' : '');
+        item.dataset.idx = gi;
+        item.innerHTML = `
+          <div class="pick-check">✓</div>
+          <div class="pick-icon">${grp.icon}</div>
+          <div class="pick-info">
+            <div class="pick-name">${esc(grp.name)}</div>
+            <div class="pick-sub">${grp.folderIds.length} pasta${grp.folderIds.length!==1?'s':''} · ${totalCards} cards</div>
+          </div>`;
+        item.onclick = () => item.classList.toggle('selected');
+        picker.appendChild(item);
+      });
+    }
+  } else {
+    // ── Editar grupo normal: mostra picker de pastas ──
+    document.getElementById('edit-picker-label').textContent = 'Pastas incluídas no grupo';
+    const currentGroupIds = new Set(g.folderIds);
+
+    // Pastas que estão neste grupo OU que estão livres (não em outros grupos)
+    const available = folders.map((f, i) => ({ f, i })).filter(({ i }) => {
+      if (currentGroupIds.has(i)) return true; // já está neste grupo
+      // está livre (não pertence a nenhum grupo)?
+      return !groups.some((grp, gi) => gi !== activeGroupIdx && grp.folderIds.includes(i));
+    });
+
+    if (!available.length) {
+      picker.innerHTML = '<div class="pick-empty">Nenhuma pasta disponível.</div>';
+    } else {
+      available.forEach(({ f, i }) => {
+        const item = document.createElement('div');
+        item.className = 'pick-item' + (currentGroupIds.has(i) ? ' selected' : '');
+        item.dataset.idx = i;
+        item.innerHTML = `
+          <div class="pick-check">✓</div>
+          <div class="pick-icon">${f.icon}</div>
+          <div class="pick-info">
+            <div class="pick-name">${esc(f.name)}</div>
+            <div class="pick-sub">${f.cards.length} card${f.cards.length !== 1 ? 's' : ''}</div>
+          </div>`;
+        item.onclick = () => item.classList.toggle('selected');
+        picker.appendChild(item);
+      });
+    }
+  }
+
+  document.getElementById('edit-group-modal').classList.add('open');
+}
+
+function closeEditGroupModal() {
+  document.getElementById('edit-group-modal').classList.remove('open');
+}
+
+function editGroupBackdropClick(e) {
+  if (e.target === document.getElementById('edit-group-modal')) closeEditGroupModal();
+}
+
+function saveGroupEdits() {
+  const name = document.getElementById('edit-group-name').value.trim();
+  if (!name) { toast('Digite um nome para o grupo'); return; }
+  const g = groups[activeGroupIdx];
+  const selected = [...document.querySelectorAll('#edit-folder-picker .pick-item.selected')].map(el => parseInt(el.dataset.idx));
+
+  if (isCollection(g)) {
+    if (!selected.length) { toast('Selecione pelo menos um grupo'); return; }
+    g.groupIds = selected;
+  } else {
+    if (!selected.length) { toast('Selecione pelo menos uma pasta'); return; }
+    g.folderIds = selected;
+  }
+  g.name = name;
+  g.icon = editGroupEmojiSelected;
+  save();
+  closeEditGroupModal();
+  toast(`✅ ${isCollection(g) ? 'Coleção' : 'Grupo'} "${name}" atualizado!`);
+  renderGroupScreen();
+}
+
+/* ═══ GROUP SCREEN ═══ */
+function renderGroupScreen() {
+  if (activeGroupIdx === null || activeGroupIdx >= groups.length) { goTo('s-home'); return; }
+  const g = groups[activeGroupIdx];
+  document.getElementById('gh-icon').textContent = g.icon;
+  document.getElementById('gh-name').textContent = g.name;
+  document.getElementById('btn-edit-group').style.display = '';
+
+  // attach hold-to-delete on group delete button
+  const delBtn = document.getElementById('btn-del-group');
+  const fresh = delBtn.cloneNode(true);
+  delBtn.parentNode.replaceChild(fresh, delBtn);
+  attachHoldDelete(fresh, deleteCurrentGroup);
+
+  const list = document.getElementById('group-folders-list');
+  list.innerHTML = '';
+
+  if (isCollection(g)) {
+    // ── Coleção: mostra os subgrupos ──
+    const validGroupIds = g.groupIds.filter(gi => groups[gi]);
+    let totalFolders = 0, totalCards = 0;
+    validGroupIds.forEach(gi => {
+      const sub = groups[gi];
+      totalFolders += sub.folderIds.length;
+      totalCards += sub.folderIds.reduce((acc, fi) => acc + (folders[fi] ? folders[fi].cards.length : 0), 0);
+    });
+    document.getElementById('gh-stat-folders').textContent = totalFolders;
+    document.getElementById('gh-stat-cards').textContent   = totalCards;
+
+    if (!validGroupIds.length) {
+      list.innerHTML = '<div class="empty" style="padding:40px 20px;"><span class="empty-icon">📭</span><div class="empty-title">Coleção vazia</div></div>';
+      return;
+    }
+    validGroupIds.forEach((gi, ai) => {
+      const sub = groups[gi];
+      const subCards = sub.folderIds.reduce((acc, fi) => acc + (folders[fi] ? folders[fi].cards.length : 0), 0);
+      const card = document.createElement('div');
+      card.className = 'gf-card';
+      card.style.animationDelay = (ai * .06) + 's';
+      card.innerHTML = `
+        <div class="gf-icon">${sub.icon}</div>
+        <div class="gf-info">
+          <div class="gf-name">${esc(sub.name)}</div>
+          <div class="gf-sub">${sub.folderIds.length} pasta${sub.folderIds.length!==1?'s':''} · ${subCards} cards</div>
+        </div>
+        <div class="gf-arrow">›</div>`;
+      card.onclick = () => { groupStack.push(activeGroupIdx); activeGroupIdx = gi; goTo('s-group'); };
+      list.appendChild(card);
+    });
+    return;
+  }
+
+  // ── Grupo normal: mostra as pastas ──
+  const validIds = g.folderIds.filter(i => folders[i]);
+  const totalCards = validIds.reduce((acc, i) => acc + folders[i].cards.length, 0);
+  document.getElementById('gh-stat-folders').textContent = validIds.length;
+  document.getElementById('gh-stat-cards').textContent   = totalCards;
+
+  if (!validIds.length) {
+    list.innerHTML = '<div class="empty" style="padding:40px 20px;"><span class="empty-icon">📭</span><div class="empty-title">Grupo vazio</div></div>';
+    return;
+  }
+  validIds.forEach((fi, ai) => {
+    const f = folders[fi];
+    const card = document.createElement('div');
+    card.className = 'gf-card';
+    card.style.animationDelay = (ai * .06) + 's';
+    const fDue = reviewIsDue(f);
+    if (fDue) {
+      card.style.borderColor = 'rgba(255,107,138,0.55)';
+      card.style.background  = 'rgba(255,107,138,0.06)';
+    }
+    card.innerHTML = `
+      <div class="gf-icon" style="position:relative;">${f.icon}${fDue ? '<div class="review-badge"></div>' : ''}</div>
+      <div class="gf-info">
+        <div class="gf-name">${esc(f.name)}</div>
+        <div class="gf-sub">${f.cards.length} card${f.cards.length!==1?'s':''}</div>
+      </div>
+      <div class="gf-arrow">›</div>`;
+    card.onclick = () => { activeFolderIdx = fi; folderOrigin = 'group'; goTo('s-folder'); };
+    list.appendChild(card);
+  });
+}
+
+/* ═══ FOLDER SCREEN ═══ */
+function folderGoBack() {
+  if (folderOrigin === 'group') goTo('s-group');
+  else goTo('s-home');
+}
+
+function renderFolderScreen() {
+  if (activeFolderIdx === null || activeFolderIdx >= folders.length) { goTo('s-home'); return; }
+  const f = folders[activeFolderIdx];
+  document.getElementById('fh-icon').textContent = f.icon;
+  document.getElementById('fh-name').textContent = f.name;
+  document.getElementById('stat-total').textContent = f.cards.length;
+  const grp = groups.find(g => g.folderIds.includes(activeFolderIdx));
+  const chip = document.getElementById('group-chip');
+  if (grp) { chip.style.display='flex'; document.getElementById('group-chip-name').textContent = grp.name; }
+  else chip.style.display = 'none';
+  renderCardList();
+  renderReviewCard();
+  document.getElementById('study-fab').classList.toggle('visible', f.cards.length > 0);
+  document.getElementById('folder-empty').style.display = f.cards.length ? 'none' : 'block';
+}
+
+function renderCardList() {
+  const f = folders[activeFolderIdx];
+  const list = document.getElementById('cards-list');
+  const emptyEl = document.getElementById('folder-empty');
+  list.innerHTML = ''; list.appendChild(emptyEl);
+  if (!f.cards.length) { emptyEl.style.display = 'block'; return; }
+  emptyEl.style.display = 'none';
+  f.cards.forEach((c, i) => {
+    const item = document.createElement('div');
+    item.className = 'card-item';
+    item.style.animationDelay = (i * .04) + 's';
+    item.innerHTML = `
+      <div class="card-item-front">
+        <div class="card-num-badge">#${c.num}</div>
+        <div class="card-question">${esc(c.pergunta)}</div>
+        <div class="card-expand-icon">›</div>
+      </div>
+      <div class="card-item-back">
+        <div class="card-answer-label">💡 Resposta</div>
+        <div class="card-answer-text">${esc(c.resposta)}</div>
+      </div>
+      <div class="card-hold-bar" id="hold-bar-${i}"></div>`;
+    item.onclick = () => item.classList.toggle('open');
+    // Hold para editar (2 segundos, com barra de progresso)
+    let holdTimer = null;
+    let holdActivated = false;
+    let holdAnim = null;
+    const bar = () => document.getElementById(`hold-bar-${i}`);
+    const startHold = (e) => {
+      holdActivated = false;
+      // Só mostra a barra após 700ms (evita ativar em cliques normais)
+      setTimeout(() => {
+        if (!holdTimer) return;
+        const b = bar();
+        b.style.transition = 'none';
+        b.style.width = '0%';
+        b.style.opacity = '1';
+        requestAnimationFrame(() => {
+          b.style.transition = 'width 1.3s linear';
+          b.style.width = '100%';
+        });
+      }, 700);
+      holdTimer = setTimeout(() => {
+        holdActivated = true;
+        const b = bar();
+        b.style.opacity = '0';
+        b.style.width = '0%';
+        if (window.getSelection) window.getSelection().removeAllRanges();
+        openManualEditor(i);
+      }, 2000);
+    };
+    const cancelHold = () => {
+      if (holdTimer) { clearTimeout(holdTimer); holdTimer = null; }
+      const b = bar();
+      b.style.transition = 'width 0.2s ease, opacity 0.2s ease';
+      b.style.width = '0%';
+      b.style.opacity = '0';
+    };
+    item.addEventListener('touchstart', startHold, { passive: true });
+    item.addEventListener('touchend',   cancelHold);
+    item.addEventListener('touchmove',  cancelHold, { passive: true });
+    item.addEventListener('mousedown',  startHold);
+    item.addEventListener('mouseup',    cancelHold);
+    item.addEventListener('mouseleave', cancelHold);
+    item.addEventListener('selectstart', (e) => { if (holdTimer) e.preventDefault(); });
+    item.addEventListener('contextmenu', (e) => e.preventDefault());
+    list.appendChild(item);
+  });
+}
+
+/* ═══ EDITOR MANUAL ═══ */
+let manualEditingIdx = null; // null = novo card, número = índice do card sendo editado
+
+function switchAddTab(tab) {
+  document.getElementById('add-tab-paste').classList.toggle('active', tab === 'paste');
+  document.getElementById('add-tab-manual').classList.toggle('active', tab === 'manual');
+  document.getElementById('add-panel-paste').style.display  = tab === 'paste'  ? 'block' : 'none';
+  document.getElementById('add-panel-manual').style.display = tab === 'manual' ? 'block' : 'none';
+}
+
+function openManualEditor(cardIdx) {
+  manualEditingIdx = cardIdx;
+  const f = folders[activeFolderIdx];
+  const isNew = cardIdx === null;
+  const title = document.getElementById('manual-editor-title');
+  const counter = document.getElementById('manual-editor-counter');
+  const btnNext = document.getElementById('manual-btn-next');
+
+  if (isNew) {
+    title.textContent = 'Novo card';
+    counter.textContent = `Card #${f.cards.length + 1}`;
+    document.getElementById('manual-pergunta').value = '';
+    document.getElementById('manual-resposta').value = '';
+    btnNext.style.display = '';
+  } else {
+    const c = f.cards[cardIdx];
+    title.textContent = `Editar card #${c.num}`;
+    counter.textContent = `${cardIdx + 1} / ${f.cards.length}`;
+    document.getElementById('manual-pergunta').value = c.pergunta;
+    document.getElementById('manual-resposta').value = c.resposta;
+    btnNext.style.display = 'none';
+  }
+  document.getElementById('manual-editor').classList.add('open');
+  // Delay maior para garantir que o modal está visível antes do foco
+  // Não forçamos foco automático no mobile pois causa duplo toque
+  // O usuário toca diretamente no campo desejado
+}
+
+function closeManualEditor() {
+  document.getElementById('manual-editor').classList.remove('open');
+  manualEditingIdx = null;
+}
+
+function manualEditorBackdropClick(e) {
+  if (e.target === document.getElementById('manual-editor')) closeManualEditor();
+}
+
+function saveManualCard() {
+  const p = document.getElementById('manual-pergunta').value.trim();
+  const r = document.getElementById('manual-resposta').value.trim();
+  if (!p) { toast('Digite a pergunta!'); document.getElementById('manual-pergunta').focus(); return; }
+  if (!r) { toast('Digite a resposta!'); document.getElementById('manual-resposta').focus(); return; }
+  const f = folders[activeFolderIdx];
+
+  if (manualEditingIdx === null) {
+    // Novo card
+    if (f.cards.length >= 100) { toast('⚠️ Limite de 100 cards atingido.'); return; }
+    f.cards.push({ num: f.cards.length + 1, pergunta: p, resposta: r });
+    toast('✅ Card criado!');
+  } else {
+    // Editar existente
+    f.cards[manualEditingIdx].pergunta = p;
+    f.cards[manualEditingIdx].resposta = r;
+    toast('✅ Card atualizado!');
+  }
+  save();
+  renderFolderScreen();
+  closeManualEditor();
+}
+
+function saveManualCardAndNext() {
+  const p = document.getElementById('manual-pergunta').value.trim();
+  const r = document.getElementById('manual-resposta').value.trim();
+  if (!p) { toast('Digite a pergunta!'); document.getElementById('manual-pergunta').focus(); return; }
+  if (!r) { toast('Digite a resposta!'); document.getElementById('manual-resposta').focus(); return; }
+  const f = folders[activeFolderIdx];
+  if (f.cards.length >= 100) { toast('⚠️ Limite de 100 cards atingido.'); closeManualEditor(); return; }
+  f.cards.push({ num: f.cards.length + 1, pergunta: p, resposta: r });
+  save();
+  renderFolderScreen();
+  toast('✅ Card salvo! Crie o próximo.');
+  // Abre novo card vazio
+  document.getElementById('manual-editor-title').textContent = 'Novo card';
+  document.getElementById('manual-editor-counter').textContent = `Card #${f.cards.length + 1}`;
+  document.getElementById('manual-pergunta').value = '';
+  document.getElementById('manual-resposta').value = '';
+  document.getElementById('manual-pergunta').focus();
+}
+
+/* ═══ ADD MODAL ═══ */
+function openAddModal() {
+  document.getElementById('modal-textarea').value = '';
+  switchAddTab('paste');
+  document.getElementById('add-modal').classList.add('open');
+}
+function closeAddModal() {
+  document.getElementById('add-modal').classList.remove('open');
+}
+function modalBackdropClick(e) {
+  if (e.target === document.getElementById('add-modal')) closeAddModal();
+}
+function addCardsFromModal() {
+  const raw = document.getElementById('modal-textarea').value.trim();
+  if (!raw) { toast('Cole algum texto antes!'); return; }
+  const parsed = parseCards(raw);
+  if (!parsed.length) { toast('Nenhum card encontrado. Verifique o formato.'); return; }
+  const f = folders[activeFolderIdx];
+  const offset = f.cards.length;
+  // renumber incoming cards starting from offset+1
+  const renumbered = parsed.map((c, i) => ({ ...c, num: offset + i + 1 }));
+  const limit = Math.min(renumbered.length, 100 - offset);
+  if (limit <= 0) { toast('⚠️ Pasta já está no limite de 100 cards.'); return; }
+  f.cards.push(...renumbered.slice(0, limit));
+  save();
+  closeAddModal();
+  if (parsed.length > limit) toast(`⚠️ Limite de 100 cards. ${limit} adicionado(s).`);
+  else toast(`✅ ${limit} card(s) adicionado(s)!`);
+  renderFolderScreen();
+}
+
+/* ═══ PARSE ═══ */
+function parseCards(text) {
+  // Remove formatação markdown: **texto**, *texto*, __texto__, _texto_
+  text = text.replace(/\*\*([^*]+)\*\*/g, '$1').replace(/\*([^*]+)\*/g, '$1');
+  text = text.replace(/__([^_]+)__/g, '$1').replace(/_([^_]+)_/g, '$1');
+  let result = [];
+
+  // ── Formato A (prioritário): padrão multilinhas, com numeração opcional
+  // Ex: "1.\nPERGUNTA: ...\nRESPOSTA: ..."  ou  "PERGUNTA: ...\nRESPOSTA: ..." (cada um em sua linha)
+  const lines = text.replace(/\r\n/g,'\n').replace(/\r/g,'\n').split('\n').map(l=>l.trim());
+  let current = null;
+  const reNum  = /^(\d{1,3})\s*[\.:\)]?\s*$/;
+  const rePerg = /^(?:PERGUNTA|FRENTE|FRONT|QUESTION|P)\s*[:\-]\s*(.+)/i;
+  const reResp = /^(?:RESPOSTA|VERSO|BACK|ANSWER|R)\s*[:\-]\s*(.+)/i;
+  function sv() { if (current && current.pergunta && current.resposta) result.push({...current}); }
+  for (const line of lines) {
+    if (!line) continue;
+    const mN = line.match(reNum);
+    if (mN) { sv(); current = { num: parseInt(mN[1], 10), pergunta: '', resposta: '' }; continue; }
+    const mP = line.match(rePerg);
+    if (mP) { sv(); current = { num: result.length + 1, pergunta: '', resposta: '' }; current.pergunta = mP[1].trim(); continue; }
+    const mR = line.match(reResp);
+    if (mR && current) { current.resposta = mR[1].trim(); continue; }
+    if (current) { if (current.resposta) current.resposta += ' ' + line; else if (current.pergunta) current.pergunta += ' ' + line; }
+  }
+  sv();
+  if (result.length) return result;
+
+  // ── Formato B: tudo numa só linha "PERGUNTA: ... RESPOSTA: ..."
+  result = [];
+  const reInline = /PERGUNTA\s*[:\-]\s*(.+?)\s*RESPOSTA\s*[:\-]\s*(.+?)(?=\s*PERGUNTA\s*[:\-]|$)/gi;
+  let mInline;
+  const testInline = text.replace(/\n/g, ' ');
+  while ((mInline = reInline.exec(testInline)) !== null) {
+    const p = mInline[1].trim();
+    const r = mInline[2].trim();
+    if (p && r) result.push({ num: result.length + 1, pergunta: p, resposta: r });
+  }
+  if (result.length) return result;
+
+  // ── Formato C: Q: / A:  ou  Q. / A.
+  const reQA = /Q[:\.\)]\s*(.+?)\s*A[:\.\)]\s*(.+?)(?=\s*Q[:\.\)]|$)/gi;
+  let mQA;
+  const testQA = text.replace(/\n/g, ' ');
+  while ((mQA = reQA.exec(testQA)) !== null) {
+    const p = mQA[1].trim();
+    const r = mQA[2].trim();
+    if (p && r) result.push({ num: result.length + 1, pergunta: p, resposta: r });
+  }
+  if (result.length) return result;
+
+  // ── Formato D: Front: / Back:
+  const reFB = /Front[:\-]\s*(.+?)\s*Back[:\-]\s*(.+?)(?=\s*Front[:\-]|$)/gi;
+  let mFB;
+  const testFB = text.replace(/\n/g, ' ');
+  while ((mFB = reFB.exec(testFB)) !== null) {
+    const p = mFB[1].trim();
+    const r = mFB[2].trim();
+    if (p && r) result.push({ num: result.length + 1, pergunta: p, resposta: r });
+  }
+  return result;
+}
+
+function loadExample() {
+  document.getElementById('modal-textarea').value = `1.\nPERGUNTA: Qual é a capital do Brasil?\nRESPOSTA: Brasília, inaugurada em 21 de abril de 1960.\n\n2.\nPERGUNTA: Qual planeta é chamado de Planeta Vermelho?\nRESPOSTA: Marte, por causa do óxido de ferro em sua superfície.`;
+  toast('Exemplo carregado!');
+}
+
+/* ═══ MODE PICKER ═══ */
+function openModePicker() {
+  document.getElementById('mode-modal').classList.add('open');
+}
+function closeModeModal() {
+  document.getElementById('mode-modal').classList.remove('open');
+}
+function modeBackdropClick(e) {
+  if (e.target === document.getElementById('mode-modal')) closeModeModal();
+}
+function startBrowse() {
+  closeModeModal();
+  browseCards = [...folders[activeFolderIdx].cards];
+  bIdx = 0; bFlipped = false;
+  goTo('s-browse');
+  renderBrowseCard();
+  buildBrowseDots();
+}
+function startTest() {
+  closeModeModal();
+  startStudy();
+}
+
+/* ═══ BROWSE MODE ═══ */
+let browseCards = [];
+let bIdx = 0;
+let bFlipped = false;
+
+function renderBrowseCard() {
+  const c = browseCards[bIdx];
+  document.getElementById('b-face-q').textContent = c.pergunta;
+  document.getElementById('b-face-a').textContent = c.resposta;
+  document.getElementById('b-sizer-q').textContent = c.pergunta;
+  document.getElementById('b-sizer-a').textContent = c.resposta;
+  document.getElementById('browse-counter').textContent = `${bIdx+1} / ${browseCards.length}`;
+  const pct = browseCards.length > 1 ? (bIdx / (browseCards.length-1)) * 100 : 100;
+  document.getElementById('browse-progress-fill').style.width = pct + '%';
+  const card = document.getElementById('browse-flip-card');
+  card.classList.remove('flipped');
+  bFlipped = false;
+  document.getElementById('btn-browse-prev').disabled = bIdx === 0;
+  document.getElementById('btn-browse-next').disabled = bIdx === browseCards.length - 1;
+}
+
+function browseFlip() {
+  bFlipped = !bFlipped;
+  const card = document.getElementById('browse-flip-card');
+  card.classList.toggle('flipped', bFlipped);
+}
+
+function browseNav(dir) {
+  const next = bIdx + dir;
+  if (next < 0 || next >= browseCards.length) return;
+  bIdx = next;
+  const card = document.getElementById('browse-flip-card');
+  card.style.transition = 'none';
+  card.classList.remove('flipped');
+  void card.offsetWidth;
+  card.style.transition = '';
+  renderBrowseCard();
+  updateBrowseDots();
+}
+
+function buildBrowseDots() {
+  const wrap = document.getElementById('browse-dots');
+  wrap.innerHTML = '';
+  browseCards.forEach((_, i) => {
+    const d = document.createElement('div');
+    d.className = 'browse-dot'; d.id = `bdot-${i}`;
+    wrap.appendChild(d);
+  });
+  updateBrowseDots();
+}
+
+function updateBrowseDots() {
+  browseCards.forEach((_, i) => {
+    const d = document.getElementById(`bdot-${i}`);
+    if (!d) return;
+    d.className = 'browse-dot';
+    if (i === bIdx) d.classList.add('current');
+    else if (i < bIdx) d.classList.add('seen');
+  });
+}
+
+/* ═══ STUDY ═══ */
+function startStudy() {
+  studyCards = [...folders[activeFolderIdx].cards];
+  sIdx=0; results={}; flipped=false;
+  document.getElementById('done-overlay').classList.remove('show');
+  goTo('s-study');
+  renderStudyCard(); buildDots();
+}
+
+function renderStudyCard() {
+  const c = studyCards[sIdx];
+  document.getElementById('face-q').textContent = c.pergunta;
+  document.getElementById('face-a').textContent = c.resposta;
+  document.getElementById('sizer-q').textContent = c.pergunta;
+  document.getElementById('sizer-a').textContent = c.resposta;
+  document.getElementById('study-counter').textContent = `${sIdx+1} / ${studyCards.length}`;
+  const pct = studyCards.length > 1 ? (sIdx / (studyCards.length-1)) * 100 : 100;
+  document.getElementById('study-progress-fill').style.width = pct + '%';
+  document.getElementById('flip-card').classList.remove('flipped');
+  flipped = false;
+  document.getElementById('judge-row').classList.remove('show');
+  // prev button
+  document.getElementById('btn-prev').disabled = sIdx === 0;
+  updateDots();
+}
+
+function prevCard() {
+  if (sIdx <= 0) return;
+  delete results[sIdx - 1];
+  sIdx--;
+  const card = document.getElementById('flip-card');
+  card.style.transition = 'none';
+  card.classList.remove('flipped');
+  void card.offsetWidth;
+  card.style.transition = '';
+  renderStudyCard();
+}
+
+function flipCard() {
+  flipped = !flipped;
+  document.getElementById('flip-card').classList.toggle('flipped', flipped);
+  if (flipped) setTimeout(() => document.getElementById('judge-row').classList.add('show'), 320);
+}
+
+function judge(correct) {
+  results[sIdx] = correct;
+  updateDots();
+  if (sIdx < studyCards.length - 1) {
+    sIdx++;
+    // 1. Desativa a transição e reseta para a frente ANTES de trocar o conteúdo
+    const card = document.getElementById('flip-card');
+    card.style.transition = 'none';
+    card.classList.remove('flipped');
+    // 2. Força o reflow para garantir que o reset seja aplicado
+    void card.offsetWidth;
+    // 3. Reativa a transição e carrega o próximo card
+    card.style.transition = '';
+    renderStudyCard();
+  } else {
+    showResult();
+  }
+}
+
+function buildDots() {
+  const wrap = document.getElementById('card-dots');
+  wrap.innerHTML = '';
+  studyCards.forEach((_, i) => {
+    const d = document.createElement('div');
+    d.className='dot'; d.id=`dot-${i}`;
+    wrap.appendChild(d);
+  });
+  updateDots();
+}
+
+function updateDots() {
+  studyCards.forEach((_, i) => {
+    const d = document.getElementById(`dot-${i}`);
+    if (!d) return;
+    d.className = 'dot';
+    if (i===sIdx) d.classList.add('current');
+    else if (results[i]===true)  d.classList.add('correct');
+    else if (results[i]===false) d.classList.add('wrong');
+  });
+}
+
+/* ═══ RESULT ═══ */
+function showResult() {
+  // Marca revisão automaticamente APENAS se estava no dia de revisar (vermelho)
+  const f = folders[activeFolderIdx];
+  if (f && f.review && f.review.durationMonths > 0 && reviewIsDue(f)) {
+    f.review.lastReviewedAt = new Date().toISOString();
+    // step aponta para o próximo intervalo a ser usado
+    const currentStep = f.review.step || 0;
+    f.review.step = Math.min(currentStep + 1, REVIEW_INTERVALS.length - 1);
+    save();
+    renderHome();
+    toast('✅ Revisão registrada!');
+  }
+  const total=studyCards.length;
+  const corrects=Object.values(results).filter(v=>v).length;
+  const wrongs=total-corrects;
+  const pct=Math.round((corrects/total)*100);
+  let emoji,title,msg;
+  if(pct===100)    {emoji='🏆';title='Perfeito!';      msg=`<strong>Incrível!</strong> Você acertou todos os ${total} flashcards!`;}
+  else if(pct>=80) {emoji='🎉';title='Muito bem!';      msg=`<strong>Ótimo!</strong> Acertou ${corrects} de ${total}. Revise os ${wrongs} que errou.`;}
+  else if(pct>=60) {emoji='📚';title='Bom progresso!';  msg=`<strong>Continue!</strong> Acertou ${corrects} de ${total}. Foque nos ${wrongs} restantes.`;}
+  else if(pct>=40) {emoji='💪';title='Continue assim!'; msg=`<strong>Não desanime!</strong> Acertou ${corrects} de ${total}. Repita a sessão!`;}
+  else             {emoji='🌱';title='Vamos praticar!'; msg=`<strong>O início é difícil.</strong> Acertou ${corrects} de ${total}. Repita quantas vezes precisar!`;}
+  document.getElementById('result-emoji').textContent=emoji;
+  document.getElementById('result-title').textContent=title;
+  document.getElementById('result-sub').textContent=`Sessão de ${total} flashcard${total>1?'s':''} concluída`;
+  document.getElementById('result-msg').innerHTML=msg;
+  document.getElementById('chip-correct').textContent=corrects;
+  document.getElementById('chip-wrong').textContent=wrongs;
+  document.getElementById('score-pct').textContent=pct+'%';
+  const ring=document.getElementById('ring-fill');
+  ring.style.stroke=pct>=80?'var(--green)':pct>=50?'var(--gold)':'var(--rose)';
+  const circ=2*Math.PI*60;
+  ring.style.strokeDasharray=circ; ring.style.strokeDashoffset=circ;
+  document.getElementById('done-overlay').classList.add('show');
+  setTimeout(()=>{ring.style.strokeDashoffset=circ-(circ*pct/100);},200);
+}
+
+function restartStudy() {
+  sIdx=0; results={}; flipped=false;
+  document.getElementById('done-overlay').classList.remove('show');
+  renderStudyCard(); buildDots();
+}
+
+/* ═══ CARD LIST MODAL ═══ */
+function openCardList(type) {
+  const isCorrect = type === 'correct';
+  const cards = studyCards.filter((_, i) => results[i] === isCorrect);
+  if (!cards.length) { toast(isCorrect ? 'Nenhum acerto ainda.' : 'Nenhum erro!'); return; }
+
+  const title = document.getElementById('cardlist-title');
+  title.innerHTML = isCorrect
+    ? `<span style="color:var(--green)">✓</span> Acertos (${cards.length})`
+    : `<span style="color:var(--rose)">✗</span> Erros (${cards.length})`;
+
+  const body = document.getElementById('cardlist-body');
+  body.innerHTML = '';
+  cards.forEach(c => {
+    const item = document.createElement('div');
+    item.className = 'cardlist-item ' + (isCorrect ? 'cl-correct' : 'cl-wrong');
+    item.innerHTML = `
+      <div class="cardlist-q">${esc(c.pergunta)}</div>
+      <div class="cardlist-expand" id="cl-expand-${c.num}">▸ ver resposta</div>
+      <div class="cardlist-a">${esc(c.resposta)}</div>`;
+    item.onclick = () => {
+      item.classList.toggle('open');
+      item.querySelector('.cardlist-expand').textContent =
+        item.classList.contains('open') ? '▾ ocultar resposta' : '▸ ver resposta';
+    };
+    body.appendChild(item);
+  });
+
+  const footer = document.getElementById('cardlist-footer');
+  footer.innerHTML = '';
+  if (!isCorrect) {
+    const btn = document.createElement('button');
+    btn.className = 'btn-retry-wrong';
+    btn.innerHTML = '🔁 Refazer somente as erradas';
+    btn.onclick = retryWrong;
+    footer.appendChild(btn);
+  }
+
+  document.getElementById('cardlist-modal').classList.add('open');
+}
+
+function closeCardList() {
+  document.getElementById('cardlist-modal').classList.remove('open');
+}
+
+function cardlistBackdropClick(e) {
+  if (e.target === document.getElementById('cardlist-modal')) closeCardList();
+}
+
+function retryWrong() {
+  const wrongCards = studyCards.filter((_, i) => results[i] === false);
+  if (!wrongCards.length) return;
+  closeCardList();
+  document.getElementById('done-overlay').classList.remove('show');
+  studyCards = wrongCards;
+  sIdx = 0; results = {}; flipped = false;
+  goTo('s-study');
+  renderStudyCard(); buildDots();
+  toast(`🔁 Refazendo ${wrongCards.length} card${wrongCards.length > 1 ? 's' : ''} errado${wrongCards.length > 1 ? 's' : ''}`);
+}
+
+/* ═══ UTILS ═══ */
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+
+let toastTimer;
+function toast(msg){
+  const el=document.getElementById('toast');
+  el.textContent=msg; el.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer=setTimeout(()=>el.classList.remove('show'),2600);
+}
+
+let touchX=null;
+document.getElementById('s-study').addEventListener('touchstart',e=>{touchX=e.touches[0].clientX;},{passive:true});
+document.getElementById('s-study').addEventListener('touchend',e=>{
+  if(touchX===null)return;
+  const dx=e.changedTouches[0].clientX-touchX; touchX=null;
+  if(Math.abs(dx)>60) flipCard();
+},{passive:true});
+
+let bTouchX=null;
+document.getElementById('s-browse').addEventListener('touchstart',e=>{bTouchX=e.touches[0].clientX;},{passive:true});
+document.getElementById('s-browse').addEventListener('touchend',e=>{
+  if(bTouchX===null)return;
+  const dx=e.changedTouches[0].clientX-bTouchX; bTouchX=null;
+  if(Math.abs(dx)>60){ browseNav(dx < 0 ? 1 : -1); }
+},{passive:true});
+
+/* ═══ BACKUP ═══ */
+function openBackupModal() {
+  const totalCards = folders.reduce((a, f) => a + f.cards.length, 0);
+  document.getElementById('bk-folders').textContent = folders.length;
+  document.getElementById('bk-groups').textContent  = groups.length;
+  document.getElementById('bk-cards').textContent   = totalCards;
+  const lastBk = localStorage.getItem('fm_last_backup');
+  document.getElementById('bk-date').textContent = lastBk
+    ? new Date(lastBk).toLocaleDateString('pt-BR', {day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'})
+    : 'Nunca';
+  switchBackupTab('full');
+  document.getElementById('backup-modal').classList.add('open');
+}
+function closeBackupModal() {
+  document.getElementById('backup-modal').classList.remove('open');
+}
+function backupBackdropClick(e) {
+  if (e.target === document.getElementById('backup-modal')) closeBackupModal();
+}
+
+function switchBackupTab(tab) {
+  document.getElementById('bk-panel-full').style.display       = tab === 'full'       ? 'block' : 'none';
+  document.getElementById('bk-panel-individual').style.display = tab === 'individual' ? 'block' : 'none';
+  document.getElementById('bk-tab-full').classList.toggle('active',       tab === 'full');
+  document.getElementById('bk-tab-individual').classList.toggle('active', tab === 'individual');
+  if (tab === 'individual') renderIndividualBackupLists();
+}
+
+function renderIndividualBackupLists() {
+  // Pastas
+  const fl = document.getElementById('bk-folder-list');
+  const fe = document.getElementById('bk-folder-empty');
+  fl.innerHTML = '';
+  if (!folders.length) { fe.style.display = 'block'; fl.style.display = 'none'; }
+  else {
+    fe.style.display = 'none'; fl.style.display = 'flex';
+    folders.forEach((f, i) => {
+      const row = document.createElement('div');
+      row.style.cssText = 'display:flex;align-items:center;gap:12px;background:var(--surface2);border:1px solid var(--border);border-radius:14px;padding:12px 14px;';
+      row.innerHTML = `
+        <span style="font-size:1.2rem">${f.icon}</span>
+        <div style="flex:1;min-width:0;">
+          <div style="font-size:.88rem;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${esc(f.name)}</div>
+          <div style="font-size:.72rem;color:var(--muted);">${f.cards.length} card${f.cards.length!==1?'s':''}</div>
+        </div>
+        <button onclick="exportFolder(${i})" style="
+          padding:8px 14px;border-radius:10px;border:none;cursor:pointer;
+          background:linear-gradient(135deg,var(--gold),#d4a030);
+          color:#0a0a0f;font-family:'Outfit',sans-serif;font-size:.75rem;font-weight:700;
+          white-space:nowrap;flex-shrink:0;
+        ">⬇️ Salvar</button>`;
+      fl.appendChild(row);
+    });
+  }
+
+  // Grupos
+  const gl = document.getElementById('bk-group-list');
+  const ge = document.getElementById('bk-group-empty');
+  gl.innerHTML = '';
+  if (!groups.length) { ge.style.display = 'block'; gl.style.display = 'none'; }
+  else {
+    ge.style.display = 'none'; gl.style.display = 'flex';
+    groups.forEach((g, gi) => {
+      const collection = isCollection(g);
+      const totalCards = g.folderIds.reduce((acc, fi) => acc + (folders[fi] ? folders[fi].cards.length : 0), 0);
+      const subInfo = collection
+        ? `${g.groupIds.length} grupo${g.groupIds.length!==1?'s':''} (coleção)`
+        : `${g.folderIds.length} pasta${g.folderIds.length!==1?'s':''} · ${totalCards} cards`;
+      const row = document.createElement('div');
+      row.style.cssText = 'display:flex;align-items:center;gap:12px;background:var(--surface2);border:1px solid rgba(167,139,250,.25);border-radius:14px;padding:12px 14px;';
+      row.innerHTML = `
+        <span style="font-size:1.2rem">${g.icon}</span>
+        <div style="flex:1;min-width:0;">
+          <div style="font-size:.88rem;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${esc(g.name)}</div>
+          <div style="font-size:.72rem;color:var(--muted);">${subInfo}</div>
+        </div>
+        <button onclick="${collection ? `toast('⚠️ Exportação de coleções ainda não suportada')` : `exportGroup(${gi})`}" style="
+          padding:8px 14px;border-radius:10px;border:none;cursor:pointer;
+          background:${collection ? 'var(--surface)' : 'linear-gradient(135deg,var(--purple),#7c3aed)'};
+          border:${collection ? '1.5px solid var(--border)' : 'none'};
+          color:${collection ? 'var(--muted)' : '#fff'};font-family:'Outfit',sans-serif;font-size:.75rem;font-weight:700;
+          white-space:nowrap;flex-shrink:0;
+        ">⬇️ Salvar</button>`;
+      gl.appendChild(row);
+    });
+  }
+}
+
+function exportFolder(i) {
+  const f = folders[i];
+  const data = { version: 1, type: 'folder', exportedAt: new Date().toISOString(), folder: f };
+  downloadJSON(data, `flashmind-pasta-${slugify(f.name)}.json`);
+  toast(`✅ Pasta "${f.name}" exportada!`);
+}
+
+function exportGroup(gi) {
+  const g = groups[gi];
+  const groupFolders = g.folderIds.map(fi => folders[fi]).filter(Boolean);
+  // Salva folderIds normalizados (0, 1, 2...) para importação segura em qualquer dispositivo
+  const normalizedGroup = { name: g.name, icon: g.icon, folderIds: groupFolders.map((_, k) => k) };
+  const data = { version: 1, type: 'group', exportedAt: new Date().toISOString(), group: normalizedGroup, folders: groupFolders };
+  downloadJSON(data, `flashmind-grupo-${slugify(g.name)}.json`);
+  toast(`✅ Grupo "${g.name}" exportado!`);
+}
+
+function downloadJSON(data, filename) {
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href = url; a.download = filename;
+  document.body.appendChild(a); a.click();
+  document.body.removeChild(a); URL.revokeObjectURL(url);
+}
+
+function slugify(str) {
+  return str.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9\-]/g, '').slice(0, 40) || 'item';
+}
+
+function importIndividualJSON(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      const data = JSON.parse(e.target.result);
+      // Detecta pasta: campo "folder" com name e cards
+      if (data.folder && data.folder.name && Array.isArray(data.folder.cards)) {
+        folders.push(data.folder);
+        save(); renderHome();
+        toast('✅ Pasta "' + data.folder.name + '" importada com ' + data.folder.cards.length + ' card(s)!');
+        renderIndividualBackupLists();
+      // Detecta grupo: campo "group" com name e array "folders"
+      } else if (data.group && data.group.name && Array.isArray(data.folders)) {
+        const startIdx = folders.length;
+        folders.push(...data.folders);
+        const newGroup = { ...data.group, folderIds: data.folders.map((_, k) => startIdx + k) };
+        groups.push(newGroup);
+        save(); renderHome();
+        toast('✅ Grupo "' + data.group.name + '" importado com ' + data.folders.length + ' pasta(s)!');
+        renderIndividualBackupLists();
+      } else {
+        toast('❌ Arquivo não reconhecido. Use um .json exportado pelo FlashMind.');
+      }
+    } catch(err) {
+      toast('❌ Arquivo inválido ou corrompido.');
+    }
+    event.target.value = '';
+  };
+  reader.readAsText(file);
+}
+
+function exportJSON() {
+  const data = { version: 1, exportedAt: new Date().toISOString(), folders, groups };
+  downloadJSON(data, `flashmind-backup-${new Date().toISOString().slice(0,10)}.json`);
+  localStorage.setItem('fm_last_backup', new Date().toISOString());
+  toast('✅ Backup exportado com sucesso!');
+  closeBackupModal();
+}
+
+function importJSON(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      const data = JSON.parse(e.target.result);
+      if (!data.folders || !Array.isArray(data.folders)) throw new Error('Formato inválido');
+      if (!confirm(`Importar ${data.folders.length} pasta(s) e ${(data.groups||[]).length} grupo(s)?\n\nISTO IRÁ SUBSTITUIR todos os dados atuais.`)) return;
+      folders = data.folders;
+      groups  = data.groups || [];
+      save();
+      renderHome();
+      toast('✅ Backup importado com sucesso!');
+      closeBackupModal();
+    } catch(err) {
+      toast('❌ Arquivo inválido ou corrompido.');
+    }
+    event.target.value = '';
+  };
+  reader.readAsText(file);
+}
+
+/* ═══ PWA — Ícone + Manifest + Service Worker + Banner de instalação ═══ */
+(function initPWA() {
+
+  /* 1. Ícone SVG gerado inline via Blob */
+  const iconSvg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+    <rect width="512" height="512" rx="100" fill="#0a0a0f"/>
+    <text x="256" y="340" font-size="300" text-anchor="middle">🧠</text>
+  </svg>`;
+  const iconBlob = new Blob([iconSvg], { type: 'image/svg+xml' });
+  const iconUrl  = URL.createObjectURL(iconBlob);
+  document.getElementById('appleTouchIcon').href = iconUrl;
+
+  /* 2. Web App Manifest via Blob (mais compatível que data URI encodada) */
+  const manifest = {
+    name: 'FlashMind',
+    short_name: 'FlashMind',
+    description: 'Sua biblioteca de flashcards',
+    start_url: './',
+    scope: './',
+    display: 'standalone',
+    orientation: 'any',
+    background_color: '#0a0a0f',
+    theme_color: '#0a0a0f',
+    lang: 'pt-BR',
+    icons: [
+      { src: iconUrl, sizes: '512x512', type: 'image/svg+xml', purpose: 'any maskable' }
+    ]
+  };
+  const manifestBlob = new Blob([JSON.stringify(manifest)], { type: 'application/manifest+json' });
+  document.getElementById('pwaManifest').href = URL.createObjectURL(manifestBlob);
+
+  /* 3. Service Worker via Blob — cache-first para o app, network-first para fontes/CDN */
+  const swCode = `
+const CACHE = 'flashmind-v3';
+const APP_SHELL = self.location.href; // URL do próprio SW = URL do HTML (blob)
+
+self.addEventListener('install', e => {
+  self.skipWaiting();
+  // Pré-cacheia a própria página (navegação offline)
+  e.waitUntil(
+    caches.open(CACHE).then(cache => {
+      return self.clients.matchAll().then(clients => {
+        if (clients.length > 0) {
+          return fetch(clients[0].url).then(res => {
+            if (res && res.status === 200) {
+              return cache.put(clients[0].url, res);
+            }
+          }).catch(() => {});
+        }
+      });
+    })
+  );
+});
+
+self.addEventListener('activate', e => {
+  e.waitUntil(
+    caches.keys().then(keys =>
+      Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k)))
+    ).then(() => self.clients.claim())
+  );
+});
+
+self.addEventListener('fetch', e => {
+  const url = e.request.url;
+  if (e.request.method !== 'GET' || url.startsWith('chrome-extension') || url.startsWith('blob:')) return;
+
+  // Fontes: network-first, fallback cache
+  if (url.includes('fonts.googleapis.com') || url.includes('fonts.gstatic.com')) {
+    e.respondWith(
+      fetch(e.request)
+        .then(res => { caches.open(CACHE).then(c => c.put(e.request, res.clone())); return res; })
+        .catch(() => caches.match(e.request))
+    );
+    return;
+  }
+
+  // Navegação (página HTML): cache-first, atualiza em background
+  if (e.request.mode === 'navigate') {
+    e.respondWith(
+      caches.match(e.request).then(cached => {
+        const fetchPromise = fetch(e.request).then(res => {
+          if (res && res.status === 200) {
+            caches.open(CACHE).then(c => c.put(e.request, res.clone()));
+          }
+          return res;
+        }).catch(() => cached);
+        return cached || fetchPromise;
+      })
+    );
+    return;
+  }
+
+  // Tudo mais: cache-first
+  e.respondWith(
+    caches.match(e.request).then(cached => {
+      if (cached) return cached;
+      return fetch(e.request).then(res => {
+        if (res && res.status === 200 && res.type !== 'opaque') {
+          caches.open(CACHE).then(c => c.put(e.request, res.clone()));
+        }
+        return res;
+      }).catch(() => new Response('Offline', { status: 503 }));
+    })
+  );
+});
+`;
+  if ('serviceWorker' in navigator) {
+    const swBlob = new Blob([swCode], { type: 'application/javascript' });
+    navigator.serviceWorker.register(URL.createObjectURL(swBlob), { scope: './' })
+      .catch(() => {});
+  }
+
+  /* 4. Banner de instalação — Android/Chrome */
+  window.addEventListener('beforeinstallprompt', e => {
+    e.preventDefault();
+    window._pwaPrompt = e;
+    showInstallBanner();
+  });
+
+  function showInstallBanner() {
+    if (document.getElementById('pwaBanner')) return;
+    const banner = document.createElement('div');
+    banner.id = 'pwaBanner';
+    banner.style.cssText = `
+      position:fixed;bottom:80px;left:50%;transform:translateX(-50%);
+      background:#111118;border:1px solid rgba(232,184,75,0.35);border-radius:14px;
+      padding:10px 16px;display:flex;align-items:center;gap:12px;
+      font-family:'Outfit',sans-serif;font-size:12px;letter-spacing:1px;
+      color:#6e6e96;z-index:9999;box-shadow:0 4px 24px rgba(0,0,0,0.5);
+      white-space:nowrap;animation:slideUp .3s cubic-bezier(.4,0,.2,1);
+    `;
+    banner.innerHTML = `
+      <span style="font-size:1.3rem">🧠</span>
+      <span style="color:#e8b84b;font-weight:600">Instalar FlashMind</span>
+      <button id="pwaInstallBtn" style="
+        font-family:'Outfit',sans-serif;font-size:11px;font-weight:700;
+        padding:7px 14px;border-radius:10px;
+        background:linear-gradient(135deg,#e8b84b,#d4a030);
+        color:#0a0a0f;border:none;cursor:pointer;
+      ">Instalar</button>
+      <button id="pwaDismissBtn" style="
+        background:transparent;border:none;color:#6e6e96;
+        cursor:pointer;font-size:16px;padding:0 2px;line-height:1;
+      ">✕</button>
+    `;
+    document.body.appendChild(banner);
+
+    document.getElementById('pwaInstallBtn').onclick = async () => {
+      if (!window._pwaPrompt) return;
+      window._pwaPrompt.prompt();
+      const { outcome } = await window._pwaPrompt.userChoice;
+      if (outcome === 'accepted') banner.remove();
+      window._pwaPrompt = null;
+    };
+    document.getElementById('pwaDismissBtn').onclick = () => banner.remove();
+  }
+
+  /* 5. Dica manual para iOS (Safari não tem beforeinstallprompt) */
+  const isIosSafari = /iP(hone|od|ad)/.test(navigator.userAgent)
+    && /Safari/.test(navigator.userAgent)
+    && !navigator.userAgent.includes('CriOS');
+  const isStandalone = window.matchMedia('(display-mode: standalone)').matches
+    || window.navigator.standalone;
+
+  if (isIosSafari && !isStandalone) {
+    setTimeout(() => {
+      toast('iOS: toque em Compartilhar ↑ → "Adicionar à Tela de Início"');
+    }, 2500);
+  }
+
+})();
+
+/* ═══ ZOOM ═══ */
+const ZOOM_LEVELS = [
+  { label: 'A−−', pct: 0.80 },
+  { label: 'A−',  pct: 0.90 },
+  { label: 'A',   pct: 1.00 },
+  { label: 'A+',  pct: 1.10 },
+  { label: 'A++', pct: 1.25 },
+];
+
+// Detecta desktop automaticamente
+const isDesktop = !(/Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent))
+  && window.innerWidth >= 768;
+
+let zoomIdx = (() => {
+  const saved = localStorage.getItem('fm_zoom2');
+  if (saved !== null) {
+    const i = ZOOM_LEVELS.findIndex(z => z.pct === parseFloat(saved));
+    return i >= 0 ? i : (isDesktop ? 2 : 3);
+  }
+  return isDesktop ? 2 : 3; // desktop=100%, mobile=110%
+})();
+
+function applyZoom() {
+  const pct = ZOOM_LEVELS[zoomIdx].pct;
+  localStorage.setItem('fm_zoom2', pct);
+
+  const onDesktop = window.innerWidth >= 768;
+  const dtContent = document.getElementById('dt-content');
+
+  if (onDesktop && dtContent && getComputedStyle(dtContent).display !== 'contents') {
+    // Desktop: aplica zoom só no conteúdo, sidebar fica intacta
+    document.body.style.zoom = '';
+    dtContent.style.zoom = pct;
+    // Elementos fixed dentro do dt-content escapam do zoom, então compensamos
+    // ajustando o offset da sidebar em variável CSS usada pelos fixed
+    const sidebar = 260; // px fixo da sidebar
+    document.documentElement.style.setProperty('--dt-sidebar-w', sidebar + 'px');
+    document.documentElement.style.setProperty('--dt-zoom', pct);
+    document.documentElement.style.setProperty('--dt-fixed-left', sidebar + 'px');
+  } else {
+    // Mobile: zoom no body inteiro
+    document.body.style.zoom = pct;
+    if (dtContent) dtContent.style.zoom = '';
+    document.documentElement.style.setProperty('--dt-fixed-left', '0px');
+    document.documentElement.style.setProperty('--dt-zoom', '1');
+  }
+
+  const btn = document.getElementById('btn-zoom');
+  if (btn) btn.textContent = ZOOM_LEVELS[zoomIdx].label;
+  const btnDt = document.getElementById('btn-zoom-dt');
+  if (btnDt) btnDt.textContent = `𝐀 ${Math.round(pct * 100)}%`;
+}
+
+function cycleZoom() {
+  zoomIdx = (zoomIdx + 1) % ZOOM_LEVELS.length;
+  applyZoom();
+  toast(`Tamanho: ${Math.round(ZOOM_LEVELS[zoomIdx].pct * 100)}%`);
+}
+
+function setDtNav(activeId) {
+  document.querySelectorAll('.dt-nav-btn').forEach(b => b.classList.remove('active'));
+  const el = document.getElementById(activeId);
+  if (el) el.classList.add('active');
+}
+
+// Inicializa variável CSS usada pelos elementos fixed no desktop
+document.documentElement.style.setProperty('--dt-fixed-left', '260px');
+document.documentElement.style.setProperty('--dt-zoom', '1');
+
+applyZoom();
+
+/* ═══ REVISÃO ESPAÇADA ═══ */
+// Protocolo: intervalos em dias
+const REVIEW_INTERVALS = [1, 3, 7, 14, 30, 60, 90];
+
+let selectedDurationCreate = 1; // meses (0 = sem revisão)
+
+function selectDuration(gridId, months) {
+  if (gridId === 'create') selectedDurationCreate = months;
+  document.querySelectorAll(`#dur-grid-${gridId} .dur-btn`).forEach(btn => {
+    btn.classList.toggle('selected', parseInt(btn.dataset.months) === months);
+  });
+}
+
+function reviewDaysUntilExpiry(folder) {
+  if (!folder.review || !folder.review.startedAt) return null;
+  const start = new Date(folder.review.startedAt);
+  const months = folder.review.durationMonths;
+  const expiry = new Date(start);
+  expiry.setMonth(expiry.getMonth() + months);
+  const now = new Date();
+  return Math.ceil((expiry - now) / (1000 * 60 * 60 * 24));
+}
+
+function reviewNextDate(folder) {
+  if (!folder.review) return null;
+  const lastMs = folder.review.lastReviewedAt
+    ? new Date(folder.review.lastReviewedAt).getTime()
+    : new Date(folder.review.startedAt).getTime();
+  // step representa quantas revisões já foram feitas
+  // o intervalo correto é o do step atual (para a próxima revisão)
+  const step = folder.review.lastReviewedAt
+    ? Math.min((folder.review.step || 0), REVIEW_INTERVALS.length - 1)
+    : 0; // primeira revisão: sempre 1 dia após criação
+  const interval = REVIEW_INTERVALS[step];
+  return new Date(lastMs + interval * 24 * 60 * 60 * 1000);
+}
+
+function reviewIsDue(folder) {
+  if (!folder.review || folder.review.durationMonths === 0) return false;
+  const daysLeft = reviewDaysUntilExpiry(folder);
+  if (daysLeft !== null && daysLeft <= 0) return false; // ciclo expirado
+  const next = reviewNextDate(folder);
+  return next <= new Date();
+}
+
+function renderReviewCard() {
+  const f = folders[activeFolderIdx];
+  const card = document.getElementById('review-info-card');
+  if (!f || !f.review || f.review.durationMonths === 0) {
+    card.style.display = 'none';
+    return;
+  }
+  card.style.display = 'flex';
+
+  const daysLeft = reviewDaysUntilExpiry(f);
+  if (daysLeft !== null && daysLeft <= 0) {
+    document.getElementById('rv-cycle').textContent = 'Ciclo encerrado';
+    document.getElementById('rv-last').textContent  = 'Revisão concluída 🎓';
+    document.getElementById('rv-next').innerHTML    = '';
+    document.getElementById('review-dot').className = 'review-status-dot green';
+    return;
+  }
+
+  const months = f.review.durationMonths;
+  const label = months === 1 ? '1 mês' : `${months} meses`;
+  document.getElementById('rv-cycle').textContent = `Ciclo: ${label}`;
+
+  const lastDate = f.review.lastReviewedAt ? new Date(f.review.lastReviewedAt) : null;
+  document.getElementById('rv-last').textContent = lastDate
+    ? `Última revisão: ${lastDate.toLocaleDateString('pt-BR')}`
+    : 'Ainda não foi revisado';
+
+  const next = reviewNextDate(f);
+  const now  = new Date();
+  const due  = reviewIsDue(f);
+  const diffDays = Math.ceil((next - now) / (1000 * 60 * 60 * 24));
+  const dot  = document.getElementById('review-dot');
+
+  if (due) {
+    dot.className = 'review-status-dot red';
+    document.getElementById('rv-next').innerHTML = `<b style="color:var(--rose)">Revisar agora!</b>`;
+  } else {
+    dot.className = 'review-status-dot green';
+    const txt = diffDays === 1 ? 'em 1 dia' : `em ${diffDays} dias`;
+    document.getElementById('rv-next').innerHTML = `<span style="color:var(--muted)">Próxima revisão: </span><b style="color:var(--green)">${txt}</b>`;
+  }
+}
+
+/* ═══ ATALHOS DE TECLADO ═══ */
+document.addEventListener('keydown', (e) => {
+  const tag = document.activeElement?.tagName;
+  const isTyping = tag === 'TEXTAREA' || tag === 'INPUT';
+
+  // Fechar modais com Esc
+  if (e.key === 'Escape') {
+    if (document.getElementById('manual-editor').classList.contains('open')) { closeManualEditor(); return; }
+    if (document.getElementById('add-modal').classList.contains('open'))    { closeAddModal(); return; }
+    if (document.getElementById('backup-modal').classList.contains('open')) { closeBackupModal(); return; }
+    if (document.getElementById('edit-group-modal').classList.contains('open')) { closeEditGroupModal(); return; }
+  }
+
+  // Editor manual: Enter salva (mas Shift+Enter permite quebra de linha)
+  if (document.getElementById('manual-editor').classList.contains('open')) {
+    if (e.key === 'Enter' && !e.shiftKey && isTyping) {
+      e.preventDefault();
+      saveManualCard();
+    }
+    return;
+  }
+
+  // Atalhos do modo estudo
+  const studyActive = document.getElementById('s-study')?.classList.contains('active');
+  if (studyActive && !isTyping) {
+    switch (e.key) {
+      case 'ArrowRight':
+      case ' ':
+        e.preventDefault();
+        if (!flipped) flipCard();
+        else judge(true);
+        break;
+      case 'ArrowLeft':
+        e.preventDefault();
+        prevCard();
+        break;
+      case 'Enter':
+        e.preventDefault();
+        flipCard();
+        break;
+      case '1':
+      case 'a':
+      case 'A':
+        e.preventDefault();
+        if (document.getElementById('judge-row').style.display !== 'none') judge(true);
+        break;
+      case '2':
+      case 'e':
+      case 'E':
+        e.preventDefault();
+        if (document.getElementById('judge-row').style.display !== 'none') judge(false);
+        break;
+    }
+  }
+});
+
+document.addEventListener('contextmenu', e => e.preventDefault());
+
+/* INIT */
+initApp();
+</script>
+</div><!-- #dt-content -->
+</body>
+</html>
